@@ -4,13 +4,48 @@ import google from "../assets/google.jpg";
 import { IoEyeOutline } from "react-icons/io5";
 import { IoEye } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
-
+import { ClipLoader } from "react-spinners";
+import axios from "axios";
+import { serverUrl } from "../App";
+import { toast } from "react-toastify";
+import { useDispatch } from "react-redux";
+import { setUserData } from "../redux/userSlice";
+import { signInWithPopup } from "@firebase/auth";
+import { auth, provider } from "../../utils/firebase";
+import { FaArrowLeftLong } from "react-icons/fa6";
 function Login() {
   const [show, setShow] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const handleLogin = async () => {
+    setLoading(true);
+    try {
+      const result = await axios.post(
+        serverUrl + "/api/auth/login",
+        { email, password },
+        { withCredentials: true },
+      );
+      dispatch(setUserData(result.data));
+      setLoading(false);
+      toast.success("Login Successfully");
+      navigate("/");
+    } catch (error) {
+      console.log(error);
+      setLoading(false);
+      toast.error(error.response.data.message);
+    }
+  };
+
   return (
     <div className="bg-[#dddbdb] w-screen h-screen flex items-center justify-center">
-      <form className="w-[90%] md:w-200 h-150 bg-[white] shadow-xl rounded-2xl flex">
+      <form
+        className="w-[90%] md:w-200 h-150 bg-[white] shadow-xl rounded-2xl flex"
+        onSubmit={(e) => e.preventDefault()}
+      >
         {/* left div */}
         <div className="md:w-[50%] w-full h-full flex flex-col items-center justify-center gap-3">
           <div>
@@ -28,6 +63,8 @@ function Login() {
               type="text"
               className="border w-full h-8.75 border-[#e7e6e6] text-[15px] px-5"
               placeholder="Your Email"
+              onChange={(e) => setEmail(e.target.value)}
+              value={email}
             />
           </div>
           <div className="flex flex-col gap-1 w-[80%] items-start justify-center px-3 relative">
@@ -39,6 +76,8 @@ function Login() {
               type={show ? "text" : "password"}
               className="border w-full h-8.75 border-[#e7e6e6] text-[15px] px-5"
               placeholder="Your Password"
+              onChange={(e) => setPassword(e.target.value)}
+              value={password}
             />
             {!show ? (
               <IoEyeOutline
@@ -53,8 +92,12 @@ function Login() {
             )}
           </div>
 
-          <button className="w-[80%] h-10 bg-black text-white cursor-pointer flex items-center justify-center rounded-[5px]">
-            Login
+          <button
+            className="w-[80%] h-10 bg-black text-white cursor-pointer flex items-center justify-center rounded-[5px]"
+            disabled={loading}
+            onClick={handleLogin}
+          >
+            {loading ? <ClipLoader size={30} color="white" /> : "Login"}
           </button>
           <span
             className="text-[13px] cursor-pointer text-[#585757]"

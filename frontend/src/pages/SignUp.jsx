@@ -4,12 +4,44 @@ import google from "../assets/google.jpg";
 import { IoEyeOutline } from "react-icons/io5";
 import { IoEye } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { serverUrl } from "../App";
+import { toast } from "react-toastify";
+import { ClipLoader } from "react-spinners";
 function SignUp() {
   const [show, setShow] = useState(false);
   const navigate = useNavigate();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("student");
+  const [loading, setLoading] = useState(false);
+  const handleSignup = async () => {
+    setLoading(true);
+    try {
+      const result = await axios.post(
+        serverUrl + "/api/auth/signup",
+        { name, password, email, role },
+        { withCredentials: true },
+      );
+      dispatch(setUserData(result.data));
+
+      setLoading(false);
+      navigate("/");
+      toast.success("Signup Successfully");
+    } catch (error) {
+      console.log(error);
+      setLoading(false);
+      toast.error(error.response.data.message);
+    }
+  };
+
   return (
     <div className="bg-[#dddbdb] w-screen h-screen flex items-center justify-center">
-      <form className="w-[90%] md:w-200 h-150 bg-[white] shadow-xl rounded-2xl flex">
+      <form
+        className="w-[90%] md:w-200 h-150 bg-[white] shadow-xl rounded-2xl flex"
+        onSubmit={(e) => e.preventDefault()}
+      >
         {/* left div */}
         <div className="md:w-[50%] w-full h-full flex flex-col items-center justify-center gap-3">
           <div>
@@ -27,6 +59,8 @@ function SignUp() {
               type="text"
               className="border w-full h-8.75 border-[#e7e6e6] text-[15px] px-5"
               placeholder="Your Name"
+              onChange={(e) => setName(e.target.value)}
+              value={name}
             />
           </div>
           <div className="flex flex-col gap-1 w-[80%] items-start justify-center px-3">
@@ -38,6 +72,8 @@ function SignUp() {
               type="text"
               className="border w-full h-8.75 border-[#e7e6e6] text-[15px] px-5"
               placeholder="Your Email"
+              onChange={(e) => setEmail(e.target.value)}
+              value={email}
             />
           </div>
           <div className="flex flex-col gap-1 w-[80%] items-start justify-center px-3 relative">
@@ -49,6 +85,8 @@ function SignUp() {
               type={show ? "text" : "password"}
               className="border w-full h-8.75 border-[#e7e6e6] text-[15px] px-5"
               placeholder="Your Password"
+              onChange={(e) => setPassword(e.target.value)}
+              value={password}
             />
             {!show ? (
               <IoEyeOutline
@@ -63,15 +101,25 @@ function SignUp() {
             )}
           </div>
           <div className="flex md:w-[50%] w-[70%] items-center justify-between">
-            <span className="px-2.5 py-1.25 border border-[#e7e6e6] rounded-xl cursor-pointer hover:border-black">
+            <span
+              className={`px-2.5 py-1.25 border-2 border-[#e7e6e6] rounded-xl  cursor-pointer hover:border-black ${role === "student" ? "border-black" : "border-[#646464]"}`}
+              onClick={() => setRole("student")}
+            >
               Student
             </span>
-            <span className="px-2.5 py-1.25 border border-[#e7e6e6] rounded-xl cursor-pointer hover:border-black">
+            <span
+              className={`px-2.5 py-1.25 border-2 border-[#e7e6e6] rounded-xl  cursor-pointer hover:border-black ${role === "educator" ? "border-black" : "border-[#646464]"}`}
+              onClick={() => setRole("educator")}
+            >
               Educator
             </span>
           </div>
-          <button className="w-[80%] h-10 bg-black text-white cursor-pointer flex items-center justify-center rounded-[5px]">
-            SignUp
+          <button
+            className="w-[80%] h-10 bg-black text-white cursor-pointer flex items-center justify-center rounded-[5px]"
+            onClick={handleSignup}
+            disabled={loading}
+          >
+            {loading ? <ClipLoader size={30} color="white" /> : "SignUp"}
           </button>
           <div className="w-[80%] flex items-center gap-2">
             <div className="w-[25%] h-[0.5px] bg-[#c4c4c4]"></div>
