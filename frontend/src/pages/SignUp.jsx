@@ -8,6 +8,7 @@ import axios from "axios";
 import { serverUrl } from "../App";
 import { toast } from "react-toastify";
 import { ClipLoader } from "react-spinners";
+import { useDispatch } from "react-redux";
 function SignUp() {
   const [show, setShow] = useState(false);
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ function SignUp() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("student");
   const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch()
   const handleSignup = async () => {
     setLoading(true);
     try {
