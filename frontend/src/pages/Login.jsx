@@ -10,9 +10,7 @@ import { serverUrl } from "../App";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import { setUserData } from "../redux/userSlice";
-import { signInWithPopup } from "@firebase/auth";
-import { auth, provider } from "../../utils/firebase";
-import { FaArrowLeftLong } from "react-icons/fa6";
+
 function Login() {
   const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
