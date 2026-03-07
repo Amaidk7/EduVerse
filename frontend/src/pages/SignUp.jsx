@@ -9,6 +9,9 @@ import { serverUrl } from "../App";
 import { toast } from "react-toastify";
 import { ClipLoader } from "react-spinners";
 import { useDispatch } from "react-redux";
+import { setUserData } from "../redux/userSlice";
+import { signInWithPopup } from "firebase/auth";
+import { auth, provider } from "../../utils/firebase";
 function SignUp() {
   const [show, setShow] = useState(false);
   const navigate = useNavigate();
@@ -17,7 +20,8 @@ function SignUp() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("student");
   const [loading, setLoading] = useState(false);
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
+
   const handleSignup = async () => {
     setLoading(true);
     try {
@@ -38,14 +42,35 @@ function SignUp() {
     }
   };
 
+  const googleSignUp = async () => {
+    try {
+      const response = await signInWithPopup(auth, provider);
+      let user = response.user;
+      let name = user.displayName;
+      let email = user.email;
+
+      const result = await axios.post(
+        serverUrl + "/api/auth/googleauth",
+        { name, email, role },
+        { withCredentials: true },
+      );
+      dispatch(setUserData(result.data));
+      navigate("/");
+      toast.success("Signup Successfully");
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response.data.message);
+    }
+  };
   return (
-    <div className="bg-[#dddbdb] w-screen h-screen flex items-center justify-center">
+    <div className="bg-[#dddbdb] w-screen h-screen flex items-center justify-center ">
       <form
         className="w-[90%] md:w-200 h-150 bg-[white] shadow-xl rounded-2xl flex"
         onSubmit={(e) => e.preventDefault()}
       >
         {/* left div */}
-        <div className="md:w-[50%] w-full h-full flex flex-col items-center justify-center gap-3">
+
+        <div className="md:w-[50%] w-full h-full flex flex-col items-center justify-center gap-3 ">
           <div>
             <h1 className="font-semibold text-[black] text-2xl">
               Let's get started
@@ -60,7 +85,7 @@ function SignUp() {
               id="name"
               type="text"
               className="border w-full h-8.75 border-[#e7e6e6] text-[15px] px-5"
-              placeholder="Your Name"
+              placeholder="Your name"
               onChange={(e) => setName(e.target.value)}
               value={name}
             />
@@ -86,7 +111,7 @@ function SignUp() {
               id="password"
               type={show ? "text" : "password"}
               className="border w-full h-8.75 border-[#e7e6e6] text-[15px] px-5"
-              placeholder="Your Password"
+              placeholder="Your password"
               onChange={(e) => setPassword(e.target.value)}
               value={password}
             />
@@ -121,16 +146,19 @@ function SignUp() {
             onClick={handleSignup}
             disabled={loading}
           >
-            {loading ? <ClipLoader size={30} color="white" /> : "SignUp"}
+            {loading ? <ClipLoader size={30} color="white" /> : "SignUp"}{" "}
           </button>
           <div className="w-[80%] flex items-center gap-2">
             <div className="w-[25%] h-[0.5px] bg-[#c4c4c4]"></div>
-            <div className="w-[50%] text-[15px] text-[#6f6f6f] flex items-center justify-center">
+            <div className="w-[50%] text-[15px] text-[#6f6f6f] flex items-center justify-center ">
               Or continue
             </div>
             <div className="w-[25%] h-[0.5px] bg-[#c4c4c4]"></div>
           </div>
-          <div className="w-[80%] h-10 border border-[black] rounded-[5px] flex items-center justify-center">
+          <div
+            className="w-[80%] h-10 border border-[black] rounded-[5px] flex items-center justify-center"
+            onClick={googleSignUp}
+          >
             <img src={google} className="w-6.25" alt="" />
             <span className="text-[18px] text-gray-500">oogle</span>
           </div>
@@ -146,10 +174,9 @@ function SignUp() {
         </div>
 
         {/* right div */}
-
         <div className="w-[50%] h-full rounded-r-2xl bg-[black] md:flex items-center justify-center flex-col hidden">
           <img src={logo} alt="logo" className="w-30 shadow-2xl" />
-          <span className="text-2xl text-white">Start Learning</span>
+          <span className="text-2xl text-white">START LEARNING</span>
         </div>
       </form>
     </div>
