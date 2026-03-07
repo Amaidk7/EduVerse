@@ -5,12 +5,11 @@ import { SiViaplay } from "react-icons/si";
 import ai from "../assets/ai.png";
 import ai1 from "../assets/SearchAi.png";
 import Logos from "../component/Logos";
-import ExploreCourses from "../component/ExploreCourses";
-import CardPage from "../component/CardPage";
+
+
 import { useNavigate } from "react-router-dom";
-import About from "../component/About";
-import Footer from "../component/Footer";
-import ReviewPage from "../component/ReviewPage";
+
+
 function Home() {
   const navigate = useNavigate();
   return (
@@ -56,11 +55,7 @@ function Home() {
         </div>
       </div>
       <Logos />
-      <ExploreCourses />
-      <CardPage />
-      <About />
-      <ReviewPage />
-      <Footer />
+      
     </div>
   );
 }
