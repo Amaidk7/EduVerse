@@ -26,7 +26,7 @@ function App() {
           path="/profile"
           element={userData ? <Profile /> : <Navigate to={"/signup"} />}
         />
-        <Route path='/forget' element={userData ? <ForgetPassword/> :<Navigate to={"/signup"}/>}/>
+        <Route path="/forget" element={<ForgetPassword />} />
       </Routes>
     </>
   );
