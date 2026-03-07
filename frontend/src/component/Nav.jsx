@@ -7,11 +7,14 @@ import axios from "axios";
 import { serverUrl } from "../App";
 import { setUserData } from "../redux/userSlice";
 import { toast } from "react-toastify";
+import { RxHamburgerMenu } from "react-icons/rx";
+import { GiSplitCross } from "react-icons/gi";
 function Nav() {
   const { userData } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [show, setShow] = useState(false);
+  const [showHam, setShowHam] = useState(false);
   const handleLogOut = async () => {
     try {
       const result = await axios.get(serverUrl + "/api/auth/logout", {
@@ -86,6 +89,66 @@ function Nav() {
                 My Courses
               </span>
             </div>
+          )}
+        </div>
+        <RxHamburgerMenu
+          className="w-8.75 h-8.75 lg:hidden text-black cursor-pointer"
+          onClick={() => setShowHam((prev) => !prev)}
+        />
+        <div
+          className={`fixed  top-0 left-0 w-screen h-screen bg-[#000000d6] flex items-center justify-center flex-col gap-5 z-10 lg:hidden ${showHam ? "translate-x-0 transition duration-600" : "translate-x-full transition duration-600"}`}
+        >
+          <GiSplitCross
+            className="w-8.75 h-8.75 fill-white absolute top-5 right-[4%]"
+            onClick={() => setShowHam((prev) => !prev)}
+          />
+          {!userData && (
+            <IoPersonCircle className="w-12.5 h-12.5 fill-black cursor-pointer   " />
+          )}
+          {userData?.photoUrl ? (
+            <img
+              src={userData?.photoUrl}
+              className="w-12.5 h-12.5 rounded-full text-white flex items-center justify-center text-[20px] border-2 bg-black  border-white cursor-pointer"
+            />
+          ) : (
+            <div className="w-12.5 h-12.5 rounded-full text-white flex items-center justify-center text-[20px] border-2 bg-black  border-white cursor-pointer">
+              {userData?.name.slice(0, 1).toUpperCase()}
+            </div>
+          )}
+          <div
+            className="w-50 h-16.25  border-2 border-white  text-white bg-[black] flex items-center justify-center  rounded-[10px] text-[18px] font-light cursor-pointer"
+            onClick={() => navigate("/profile")}
+          >
+            My Profile
+          </div>
+          <div
+            className="w-50 h-16.25  border-2 border-white  text-white bg-[black] flex items-center justify-center  rounded-[10px] text-[18px] font-light cursor-pointer"
+            onClick={() => navigate("/mycourses")}
+          >
+            My Courses
+          </div>
+          {userData?.role === "educator" && (
+            <div
+              className="w-50 h-16.25 border-2 border-white flex items-center justify-center  text-white bg-[black]  rounded-[10px] text-[18px] font-light cursor-pointer"
+              onClick={() => navigate("/dashboard")}
+            >
+              Dashboard
+            </div>
+          )}
+          {!userData ? (
+            <span
+              className="w-50 h-16.25 border-2 border-white flex items-center justify-center  text-white bg-[black]  rounded-[10px] text-[18px] font-light cursor-pointer"
+              onClick={() => navigate("/login")}
+            >
+              Login
+            </span>
+          ) : (
+            <span
+              className="w-50 h-16.25 border-2 border-white flex items-center justify-center  text-white bg-[black]  rounded-[10px] text-[18px] font-light cursor-pointer"
+              onClick={handleLogOut}
+            >
+              LogOut
+            </span>
           )}
         </div>
       </div>

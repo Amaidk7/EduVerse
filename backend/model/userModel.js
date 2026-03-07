@@ -32,11 +32,20 @@ const userSchema = new mongoose.Schema(
         ref: "Course",
       },
     ],
+    resetOtp: {
+      type: String,
+    },
+    otpExpires: {
+      type: Date,
+    },
+    isOtpVerifed: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true },
 );
 
+const User = mongoose.model("User", userSchema);
 
-const User = mongoose.model("User",userSchema)
-
-export default(User)
+export default User;
