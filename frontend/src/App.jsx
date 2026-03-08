@@ -14,9 +14,10 @@ import Dashboard from "./pages/Educator/Dashboard";
 import Courses from "./pages/Educator/Courses";
 import CreateCourses from "./pages/Educator/CreateCourses";
 import getCreatorCourse from "./customHooks/getCreatorCourse";
+import EditCourse from "./pages/Educator/EditCourse";
 function App() {
   getCurrentUser();
-  getCreatorCourse()
+  getCreatorCourse();
   const { userData } = useSelector((state) => state.user);
   return (
     <>
@@ -62,6 +63,16 @@ function App() {
           element={
             userData?.role === "educator" ? (
               <CreateCourses />
+            ) : (
+              <Navigate to={"/signup"} />
+            )
+          }
+        />
+        <Route
+          path="/editcourse/:courseId"
+          element={
+            userData?.role === "educator" ? (
+              <EditCourse />
             ) : (
               <Navigate to={"/signup"} />
             )
