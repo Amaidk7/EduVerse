@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { serverUrl } from '../../App';
 import axios from 'axios';
-
+import { setCreatorCourseData } from '../../redux/courseSlice';
 function Courses() {
     const navigate= useNavigate()
     const dispatch = useDispatch()
