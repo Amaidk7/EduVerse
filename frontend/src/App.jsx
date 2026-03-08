@@ -12,6 +12,7 @@ import ForgetPassword from "./pages/ForgetPassword";
 import EditProfile from "./pages/EditProfile";
 import Dashboard from "./pages/Educator/Dashboard";
 import Courses from "./pages/Educator/Courses";
+import CreateCourses from "./pages/Educator/CreateCourses";
 function App() {
   getCurrentUser();
   const { userData } = useSelector((state) => state.user);
@@ -49,6 +50,16 @@ function App() {
           element={
             userData?.role === "educator" ? (
               <Courses />
+            ) : (
+              <Navigate to={"/signup"} />
+            )
+          }
+        />
+        <Route
+          path="/createcourse"
+          element={
+            userData?.role === "educator" ? (
+              <CreateCourses />
             ) : (
               <Navigate to={"/signup"} />
             )
