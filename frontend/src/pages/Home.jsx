@@ -8,6 +8,7 @@ import Logos from "../component/Logos";
 
 
 import { useNavigate } from "react-router-dom";
+import ExploreCourses from "../component/ExploreCourses";
 
 
 function Home() {
@@ -55,7 +56,7 @@ function Home() {
         </div>
       </div>
       <Logos />
-      
+      <ExploreCourses />
     </div>
   );
 }
