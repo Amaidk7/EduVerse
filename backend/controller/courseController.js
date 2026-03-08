@@ -1,6 +1,6 @@
 import uploadOnCloudinary from "../config/cloudinary.js"
 import Course from "../model/courseModel.js"
-import Lecture from "../model/lectureModel.js"
+
 import User from "../model/userModel.js"
 
 // for Course
