@@ -16,6 +16,7 @@ import CreateCourses from "./pages/Educator/CreateCourses";
 import getCreatorCourse from "./customHooks/getCreatorCourse";
 import EditCourse from "./pages/Educator/EditCourse";
 import getPublishedCourse from "./customHooks/getPublishedCourse";
+import AllCourses from "./pages/Educator/AllCourses";
 function App() {
   getCurrentUser();
   getCreatorCourse();
@@ -39,6 +40,10 @@ function App() {
         <Route
           path="/editprofile"
           element={userData ? <EditProfile /> : <Navigate to={"/signup"} />}
+        />
+        <Route
+          path="/allcourses"
+          element={userData ? <AllCourses /> : <Navigate to={"/signup"} />}
         />
         <Route
           path="/dashboard"
