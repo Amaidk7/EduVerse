@@ -10,6 +10,8 @@ import { useSelector } from "react-redux";
 import Profile from "./pages/Profile";
 import ForgetPassword from "./pages/ForgetPassword";
 import EditProfile from "./pages/EditProfile";
+import Dashboard from "./pages/Educator/Dashboard";
+import Courses from "./pages/Educator/Courses";
 function App() {
   getCurrentUser();
   const { userData } = useSelector((state) => state.user);
@@ -31,6 +33,26 @@ function App() {
         <Route
           path="/editprofile"
           element={userData ? <EditProfile /> : <Navigate to={"/signup"} />}
+        />
+        <Route
+          path="/dashboard"
+          element={
+            userData?.role === "educator" ? (
+              <Dashboard />
+            ) : (
+              <Navigate to={"/signup"} />
+            )
+          }
+        />
+        <Route
+          path="/courses"
+          element={
+            userData?.role === "educator" ? (
+              <Courses />
+            ) : (
+              <Navigate to={"/signup"} />
+            )
+          }
         />
       </Routes>
     </>
