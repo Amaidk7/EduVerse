@@ -87,27 +87,27 @@ function App() {
             )
           }
         />
+        <Route
+          path="/createlecture/:courseId"
+          element={
+            userData?.role === "educator" ? (
+              <CreateLecture />
+            ) : (
+              <Navigate to={"/signup"} />
+            )
+          }
+        />
+        <Route
+          path="/editlecture/:courseId/:lectureId"
+          element={
+            userData?.role === "educator" ? (
+              <EditLecture />
+            ) : (
+              <Navigate to={"/signup"} />
+            )
+          }
+        />
       </Routes>
-      <Route
-        path="/createlecture/:courseId"
-        element={
-          userData?.role === "educator" ? (
-            <CreateLecture />
-          ) : (
-            <Navigate to={"/signup"} />
-          )
-        }
-      />
-      <Route
-        path="/editlecture/:courseId/:lectureId"
-        element={
-          userData?.role === "educator" ? (
-            <EditLecture />
-          ) : (
-            <Navigate to={"/signup"} />
-          )
-        }
-      />
     </>
   );
 }
