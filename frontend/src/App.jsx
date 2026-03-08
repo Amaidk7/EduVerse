@@ -13,8 +13,10 @@ import EditProfile from "./pages/EditProfile";
 import Dashboard from "./pages/Educator/Dashboard";
 import Courses from "./pages/Educator/Courses";
 import CreateCourses from "./pages/Educator/CreateCourses";
+import getCreatorCourse from "./customHooks/getCreatorCourse";
 function App() {
   getCurrentUser();
+  getCreatorCourse()
   const { userData } = useSelector((state) => state.user);
   return (
     <>
