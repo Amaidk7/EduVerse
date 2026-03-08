@@ -45,12 +45,20 @@ function Nav() {
               onClick={() => setShow((prev) => !prev)}
             />
           )}
-          <div
-            className="w-12.5 h-12.5 rounded-full text-white flex items-center justify-center text-[20px] border-2 bg-black  border-white cursor-pointer"
-            onClick={() => setShow((prev) => !prev)}
-          >
-            {userData?.name.slice(0, 1).toUpperCase()}
-          </div>
+          {userData?.photoUrl ? (
+            <img
+              src={userData?.photoUrl}
+              className="w-12.5 h-12.5 rounded-full text-white flex items-center justify-center text-[20px] border-2 bg-black  border-white cursor-pointer"
+              onClick={() => setShow((prev) => !prev)}
+            />
+          ) : (
+            <div
+              className="w-12.5 h-12.5 rounded-full text-white flex items-center justify-center text-[20px] border-2 bg-black  border-white cursor-pointer"
+              onClick={() => setShow((prev) => !prev)}
+            >
+              {userData?.name.slice(0, 1).toUpperCase()}
+            </div>
+          )}
           {userData?.role === "educator" && (
             <div
               className="px-5 py-2.5 border-2 border-white  text-white bg-[black]  rounded-[10px] text-[18px] font-light cursor-pointer"
@@ -92,7 +100,7 @@ function Nav() {
           )}
         </div>
         <RxHamburgerMenu
-          className="w-8.75 h-8.75 lg:hidden text-black cursor-pointer"
+          className="w-8.75 h-8.75 lg:hidden text-white cursor-pointer"
           onClick={() => setShowHam((prev) => !prev)}
         />
         <div
