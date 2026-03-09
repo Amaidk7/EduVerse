@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+import mongoose from "mongoose";
 
 const connectDb = async () => {
     try {
@@ -8,7 +8,5 @@ const connectDb = async () => {
         console.log(error)
     }
 }
-
-
 
 export default connectDb

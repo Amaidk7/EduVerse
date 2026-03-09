@@ -93,7 +93,7 @@ function ViewCourse() {
                 key: import.meta.env.VITE_RAZORPAY_KEY_ID,
                 amount: orderData.data.amount,
                 currency: 'INR',
-                name:"EDU VERSE",
+                name:"VIRTUAL COURSES",
                 description:"COURSE ENROLLMENT PAYMENT",
                 order_id:orderData.data.id,
                 handler: async function (response) {
@@ -161,7 +161,7 @@ function ViewCourse() {
 
                 {/* thumbnail */}
                 <div className='w-full md:w-1/2'>
-                 <FaArrowLeftLong className='text-[black] w-5.5 h-5.5 cursor-pointer' onClick={()=>navigate("/")}/>
+                 <FaArrowLeftLong className='text-[black] w-[22px] h-[22px] cursor-pointer' onClick={()=>navigate("/")}/>
                    {selectedCourse?.thumbnail ? <img src={selectedCourse?.thumbnail} alt=""  className='rounded-xl w-full object-cover'/> :
                    <img src={img} alt="" className='rounded-xl w-full object-cover'/>
                    }
@@ -170,7 +170,7 @@ function ViewCourse() {
 
                 {/* courseInfo */}
 
-                <div className='flex-1 space-y-2 mt-5'>
+                <div className='flex-1 space-y-2 mt-[20px]'>
                     <h2 className='text-2xl font-bold'>{selectedCourse?.title}</h2>
                     <p className='text-gray-600'>{selectedCourse?.subTitle}</p>
 
@@ -286,7 +286,7 @@ function ViewCourse() {
 {/* for Creator Info */}
             <div className='flex items-center gap-4 pt-4 border-t'>
 
-               {creatorData?.photoUrl? <img src={creatorData?.photoUrl} alt="" className=' border border-gray-200 w-16 h-16 rounded-full object-cover' />:<img src={img} alt="" className=' w-16 h-16 rounded-full object-cover border border-gray-200'  /> }
+               {creatorData?.photoUrl? <img src={creatorData?.photoUrl} alt="" className=' border-1 border-gray-200 w-16 h-16 rounded-full object-cover' />:<img src={img} alt="" className=' w-16 h-16 rounded-full object-cover border-1 border-gray-200'  /> }
 
                 <div>
                     <h2 className='text-lg font-semibold'>{creatorData?.name}</h2>
@@ -299,7 +299,7 @@ function ViewCourse() {
                 <p className='text-xl font-semibold mb-2'>Other Published Courses by the Educator -</p>
             </div>
 
-            <div className='w-full transition-all duration-300 py-5   flex items-start justify-center lg:justify-start flex-wrap gap-6 lg:px-20 '>
+            <div className='w-full transition-all duration-300 py-[20px]   flex items-start justify-center lg:justify-start flex-wrap gap-6 lg:px-[80px] '>
                 {
                     creatorCourses?.map((course,index)=>(
                         <Card key={index} thumbnail={course.thumbnail} id={course._id} price={course.price} title={course.title} category={course.category} />

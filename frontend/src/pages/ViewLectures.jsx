@@ -41,7 +41,7 @@ function ViewLectures() {
         <div className='w-full md:w-2/3 bg-white rounded-2xl shadow-md p-6 border border-gray-200'>
          <div className='mb-6'>
 
-            <h2 className='text-2xl font-bold flex items-center justify-start gap-5  text-gray-800'><FaArrowLeftLong className='text-black w-5.5 h-5.5 cursor-pointer' onClick={()=>navigate("/")}/>{selectedCourse?.title}</h2>
+            <h2 className='text-2xl font-bold flex items-center justify-start gap-[20px]  text-gray-800'><FaArrowLeftLong className='text-black w-[22px] h-[22px] cursor-pointer' onClick={()=>navigate("/")}/>{selectedCourse?.title}</h2>
 
             <div className='mt-2 flex gap-4 text-sm text-gray-500 font-medium'>
                 <span>Category : {selectedCourse?.category}</span>

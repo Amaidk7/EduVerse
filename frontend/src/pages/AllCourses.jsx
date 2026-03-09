@@ -50,12 +50,12 @@ function AllCourses() {
 
       {/* sideBar */}
 
-      <aside className={`w-65 h-screen overflow-y-auto bg-black fixed  top-0 left-0 p-6 py-32.5 border-r border-gray-200 shadow-md transition-transform duration-300 z-5 ${isSidebarVisible ? "translate-x-0 " : "-translate-x-full"} md:block md:translate-x-0`} >
+      <aside className={`w-[260px] h-screen overflow-y-auto bg-black fixed  top-0 left-0 p-6 py-[130px] border-r border-gray-200 shadow-md transition-transform duration-300 z-5 ${isSidebarVisible ? "translate-x-0 " : "-translate-x-full"} md:block md:translate-x-0`} >
         <h2 className='text-xl font-bold flex items-center justify-center gap-2 text-gray-50 mb-6'><FaArrowLeftLong className='text-white' onClick={()=>navigate("/")} />Filter by Category</h2>
 
-        <form action="" onSubmit={(e)=>e.preventDefault()} className='space-y-4 text-sm  bg-gray-600 border-white text-[white] border  p-5 rounded-2xl'>
+        <form action="" onSubmit={(e)=>e.preventDefault()} className='space-y-4 text-sm  bg-gray-600 border-white text-[white] border  p-[20px] rounded-2xl'>
 
-            <button className='px-2.5 py-2.5  bg-black text-white  rounded-[10px] text-[15px] font-light flex items-center justify-center gap-2 cursor-pointer' onClick={()=>navigate("/search")}>Search with AI <img src={ai} className='w-7.5 h-7.5 rounded-full' alt="" /></button>
+            <button className='px-[10px] py-[10px]  bg-black text-white  rounded-[10px] text-[15px] font-light flex items-center justify-center gap-2 cursor-pointer' onClick={()=>navigate("/search")}>Search with AI <img src={ai} className='w-[30px] h-[30px] rounded-full' alt="" /></button>
 
             <label htmlFor="" className='flex items-center gap-3 cursor-pointer hover:text-gray-200 transition'>
                 <input type="checkbox" className='accent-black w-4 h-4 rounded-md' value={'App Development'} onChange={toggleCategory} /> App Development
@@ -98,7 +98,7 @@ function AllCourses() {
          
       </aside>
 
-      <main className='w-full transition-all duration-300 py-32.5 md:pl-75  flex items-start justify-center md:justify-start flex-wrap gap-6 px-2.5'>
+      <main className='w-full transition-all duration-300 py-[130px] md:pl-[300px]  flex items-start justify-center md:justify-start flex-wrap gap-6 px-[10px]'>
         {
          filterCourses?.map((course , index)=>(
             <Card key={index} thumbnail={course.thumbnail} title={course.title} category={course.category} price={course.price} id={course._id} reviews={course.reviews} />

@@ -41,7 +41,7 @@ function EditProfile() {
   return (
     <div className='min-h-screen flex items-center justify-center bg-gray-100 px-4 py-10'>
         <div className='bg-white rounded-2xl shadow-lg p-8 max-w-xl w-full relative'>
-        <FaArrowLeftLong  className='absolute top-[5%] left-[5%] w-5.5 h-5.5 cursor-pointer' onClick={()=>navigate("/profile")}/>
+        <FaArrowLeftLong  className='absolute top-[5%] left-[5%] w-[22px] h-[22px] cursor-pointer' onClick={()=>navigate("/profile")}/>
             <h2 className='text-2xl font-bold text-center text-gray-800 mb-6'>Edit Profile</h2>
         <form action="" className='space-y-5' onSubmit={(e)=>e.preventDefault()}>
            <div className='flex flex-col items-center text-center'>
