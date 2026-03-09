@@ -48,10 +48,7 @@ function App() {
           path="/profile"
           element={userData ? <Profile /> : <Navigate to={"/signup"} />}
         />
-        <Route
-          path="/forget"
-          element={userData ? <ForgetPassword /> : <Navigate to={"/signup"} />}
-        />
+        <Route path="/forget" element={<ForgetPassword />} />
         <Route
           path="/editprofile"
           element={userData ? <EditProfile /> : <Navigate to={"/signup"} />}

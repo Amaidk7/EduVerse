@@ -1,51 +1,50 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: true,
+const userSchema = new mongoose.Schema({
+    name:{
+        type:String,
+        required:true
     },
-    description: {
-      type: String,
+    description:{
+        type:String
     },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
+    email:{
+        type:String,
+        required:true,
+        unique:true
     },
-    password: {
-      type: String,
+    password:{
+        type:String
     },
-    role: {
-      type: String,
-      enum: ["student", "educator"],
-      required: true,
+    role:{
+        type:String,
+        enum:["student","educator"],
+        required:true
     },
-    photoUrl: {
-      type: String,
-      default: "",
+    photoUrl:{
+        type:String,
+        default:""
     },
-    enrolledCourses: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Course",
-      },
-    ],
-    resetOtp: {
-      type: String,
-    },
-    otpExpires: {
-      type: Date,
-    },
-    isOtpVerifed: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  { timestamps: true },
-);
+    enrolledCourses:[{
+      type:mongoose.Schema.Types.ObjectId,
+      ref: "Course"
 
-const User = mongoose.model("User", userSchema);
+    }],
+    resetOtp:{
+      type:String
+    },
+    otpExpires:{
+      type:Date
+    },
+    isOtpVerifed:{
+      type:Boolean,
+      default:false
+    }
 
-export default User;
+},{timestamps:true})
+
+const User = mongoose.model("User" , userSchema)
+
+export default User
+
+
