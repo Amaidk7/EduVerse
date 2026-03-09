@@ -93,7 +93,7 @@ function ViewCourse() {
                 key: import.meta.env.VITE_RAZORPAY_KEY_ID,
                 amount: orderData.data.amount,
                 currency: 'INR',
-                name:"VIRTUAL COURSES",
+                name:"EDU VERSE",
                 description:"COURSE ENROLLMENT PAYMENT",
                 order_id:orderData.data.id,
                 handler: async function (response) {
