@@ -19,14 +19,17 @@ import getPublishedCourse from "./customHooks/getPublishedCourse";
 import AllCourses from "./pages/AllCourses";
 import CreateLecture from "./pages/Educator/CreateLecture";
 import EditLecture from "./pages/Educator/EditLecture";
+import ScrollToTop from "./component/ScrollToTop";
 function App() {
   getCurrentUser();
   getCreatorCourse();
   getPublishedCourse();
+
   const { userData } = useSelector((state) => state.user);
   return (
     <>
       <ToastContainer />
+      <ScrollToTop/>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route
