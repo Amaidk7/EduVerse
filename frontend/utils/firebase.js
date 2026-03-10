@@ -1,14 +1,13 @@
-// Import the functions you need from the SDKs you need
+// firebase.js
+
 import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-import {getAuth, GoogleAuthProvider} from "firebase/auth"
-// Your web app's Firebase configuration
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_APIKEY ,
-  authDomain: "loginvirtualcourses.firebaseapp.com",
-  projectId: "loginvirtualcourses",
-  storageBucket: "loginvirtualcourses.firebasestorage.app",
+  apiKey: import.meta.env.VITE_FIREBASE_APIKEY,
+  authDomain: "logineduverse.firebaseapp.com",
+  projectId: "logineduverse",
+  storageBucket: "logineduverse.appspot.com",
   messagingSenderId: "380805556055",
   appId: "1:380805556055:web:77af8cc475c511d09fc012"
 };
@@ -16,7 +15,10 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-const auth = getAuth(app)
-const provider = new GoogleAuthProvider()
+// Firebase Auth
+const auth = getAuth(app);
 
-export {auth,provider}
+// Google Provider
+const provider = new GoogleAuthProvider();
+
+export { auth, provider };
