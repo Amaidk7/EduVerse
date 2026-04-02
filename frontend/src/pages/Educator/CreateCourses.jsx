@@ -1,67 +1,67 @@
-import axios from 'axios';
-import React, { useState } from 'react'
+import axios from "axios";
+import React, { useState } from "react";
 import { FaArrowLeftLong } from "react-icons/fa6";
-import { useNavigate } from 'react-router-dom';
-import { serverUrl } from '../../App';
-import { toast } from 'react-toastify';
-import { ClipLoader } from 'react-spinners';
+import { useNavigate } from "react-router-dom";
+import { serverUrl } from "../../App";
+import { toast } from "react-toastify";
+import { ClipLoader } from "react-spinners";
+
+const CATEGORIES = ["App Development", "AI/ML", "AI Tools", "Data Science", "Data Analytics", "Ethical Hacking", "UI UX Designing", "Web Development", "Others"];
+
 function CreateCourses() {
-    const navigate = useNavigate()
-    const [title , setTitle] = useState("")
-    const [category,setCategory] = useState("")
-    const [loading,setLoading] = useState(false)
+  const navigate = useNavigate();
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    const handleCreateCourse = async () => {
-        setLoading(true)
-        try {
-            const result = await axios.post(serverUrl + "/api/course/create" , {title , category} , {withCredentials:true})
-            console.log(result.data)
-            navigate("/courses")
-            setLoading(false)
-            toast.success("Course Created")
-
-        } catch (error) {
-            console.log(error)
-            setLoading(false)
-            toast.error(error.response.data.message)
-        }
-        
+  const handleCreateCourse = async () => {
+    setLoading(true);
+    try {
+      await axios.post(serverUrl + "/api/course/create", { title, category }, { withCredentials: true });
+      navigate("/courses");
+      toast.success("Course Created");
+    } catch (error) {
+      setLoading(false);
+      toast.error(error.response?.data?.message || "Failed to create course");
     }
+  };
+
   return (
-    <div className='min-h-screen flex items-center justify-center bg-gray-100 px-4 py-10'>
-      <div className='max-w-xl w-[600px] mx-auto p-6 bg-white shadow-md rounded-md mt-10 relative'>
-       <FaArrowLeftLong className='top-[8%] absolute left-[5%] w-[22px] h-[22px] cursor-pointer' onClick={()=>navigate("/courses")}/>
-       <h2 className='text-2xl font-semibold mb-6 text-center'>Create Course</h2>
+    <div style={{ minHeight: "100vh", background: "var(--bg-primary)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div className="animate-scale-in" style={{ width: "100%", maxWidth: 480, background: "var(--bg-card)", borderRadius: 24, border: "1px solid var(--border)", boxShadow: "var(--shadow-hover)", padding: "40px 36px" }}>
 
-       <form className='space-y-5' onSubmit={(e)=>e.preventDefault()}>
-        <div>
-            <label htmlFor="title" className='block text-sm font-medium text-gray-700 mb-1'>Course Title</label>
-            <input type="text" id='title' placeholder='Enter Course title'  className='w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[black]'
-            onChange={(e)=>setTitle(e.target.value)} value={title}/>
-        </div>
-        <div>
-            <label htmlFor="cat" className='block text-sm font-medium text-gray-700 mb-1'>Course Category</label>
-            <select  id="cat" className='w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[black]'
-            onChange={(e)=>setCategory(e.target.value)}>
-                <option value="">Select Category</option>
-                <option value="App Development">App Development</option>
-                <option value="AI/ML">AI/ML</option>
-                <option value="AI Tools">AI Tools
-                </option>
-                <option value="Data Science">Data Science</option>
-                <option value="Data Analytics">Data Analytics</option>
-                <option value="Ethical Hacking">Ethical Hacking</option>
-                <option value="UI UX Designing">UI UX Designing</option>
-                <option value="Web Development">Web Development</option>
-                <option value="Others">Others</option>
+        <button onClick={() => navigate("/courses")} style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)", fontSize: 14, marginBottom: 24 }}>
+          <FaArrowLeftLong /> My Courses
+        </button>
+
+        <div className="section-label" style={{ marginBottom: 8 }}>Educator</div>
+        <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 24, fontWeight: 800, color: "var(--text-primary)", marginBottom: 6 }}>Create New Course</h1>
+        <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 28 }}>Start with a title and category — you can fill in details later</p>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)" }}>Course Title</label>
+            <input className="ev-input" type="text" placeholder="e.g. Complete Web Development Bootcamp" value={title} onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleCreateCourse()} />
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)" }}>Category</label>
+            <select className="ev-input" value={category} onChange={(e) => setCategory(e.target.value)} style={{ cursor: "pointer" }}>
+              <option value="">Select Category</option>
+              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
-        </div>
-        <button className='w-full bg-[black] text-white py-2 px-4 rounded-md active:bg-[#3a3a3a] transition' disabled={loading} onClick={handleCreateCourse}>{loading? <ClipLoader size={30} color='white'/>:"Create"}</button>
-       </form>
-      </div>
+          </div>
 
+          <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+            <button className="btn-outline" style={{ flex: 1, justifyContent: "center" }} onClick={() => navigate("/courses")}>Cancel</button>
+            <button className="btn-primary" style={{ flex: 1, justifyContent: "center" }} disabled={loading} onClick={handleCreateCourse}>
+              {loading ? <ClipLoader size={20} color="var(--bg-primary)" /> : "Create Course"}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
-  )
+  );
 }
 
-export default CreateCourses
+export default CreateCourses;

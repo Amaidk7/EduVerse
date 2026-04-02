@@ -226,7 +226,7 @@ function AllCourses() {
           >
             {filterCourses.map((course, index) => (
               <div
-                key={index}
+                key={course._id}
                 className="animate-fade-up"
                 style={{ animationDelay: `${Math.min(index * 0.05, 0.4)}s` }}
               >

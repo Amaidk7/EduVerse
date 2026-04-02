@@ -1,109 +1,104 @@
-import React from 'react'
-import { FaArrowLeftLong } from "react-icons/fa6";
-import { useNavigate } from 'react-router-dom';
-import img from "../../assets/empty.jpg"
+// =================== Courses.jsx ===================
+import React, { useEffect } from "react";
+import { FaArrowLeftLong, FaPlus } from "react-icons/fa6";
 import { FaEdit } from "react-icons/fa";
-import { useDispatch, useSelector } from 'react-redux';
-import { useEffect } from 'react';
-import { serverUrl } from '../../App';
-import axios from 'axios';
-import { setCreatorCourseData } from '../../redux/courseSlice';
-function Courses() {
-    const navigate= useNavigate()
-    const dispatch = useDispatch()
-    const {userData} = useSelector(state=>state.user)
-    const {creatorCourseData} = useSelector(state=>state.course)
-     useEffect(()=>{
-       const creatorCourses = async () => {
-        try {
-            const result = await axios.get(serverUrl + "/api/course/getcreator" , {withCredentials:true})
-            console.log(result.data)
-            dispatch(setCreatorCourseData(result.data))
-            
-        } catch (error) {
-            console.log(error)
-            
-        }
-       }
-       creatorCourses()
-    },[userData])
-   
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { serverUrl } from "../../App";
+import axios from "axios";
+import { setCreatorCourseData } from "../../redux/courseSlice";
+import Nav from "../../component/Nav";
+import img from "../../assets/empty.jpg";
+
+export function Courses() {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { userData } = useSelector((state) => state.user);
+  const { creatorCourseData } = useSelector((state) => state.course);
+
+  useEffect(() => {
+    const creatorCourses = async () => {
+      try {
+        const result = await axios.get(serverUrl + "/api/course/getcreator", { withCredentials: true });
+        dispatch(setCreatorCourseData(result.data));
+      } catch (e) {}
+    };
+    creatorCourses();
+  }, [userData]);
+
   return (
-    <div className='flex min-h-screen bg-gray-100'>
-       <div className='w-[100%] min-h-screen p-4 sm:p-6   bg-gray-100'>
-       <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3'>
+    <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
+      <Nav />
+      <div style={{ maxWidth: 1000, margin: "0 auto", padding: "100px 24px 60px" }}>
 
-        <div className='flex items-center justify-center gap-3'>
-          <FaArrowLeftLong className=' w-[22px] h-[22px] cursor-pointer' onClick={()=>navigate("/dashboard")} />
-          <h1 className='text-2xl font-semibold'>All Created Courses</h1>
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 32 }}>
+          <div>
+            <button onClick={() => navigate("/dashboard")} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)", fontSize: 14, marginBottom: 12 }}>
+              <FaArrowLeftLong /> Dashboard
+            </button>
+            <div className="section-label" style={{ marginBottom: 6 }}>Educator</div>
+            <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 28, fontWeight: 800, color: "var(--text-primary)" }}>My Courses</h1>
+          </div>
+          <button className="btn-primary" style={{ gap: 8 }} onClick={() => navigate("/createcourse")}>
+            <FaPlus size={14} /> Create Course
+          </button>
         </div>
-        <button className='bg-[black] text-white px-4 py-2 rounded hover:bg-gray-500' onClick={()=>navigate("/createcourse")}>Create Course</button>
-       </div>
 
-       {/* for Large Screen table */}
-       <div className='hidden md:block bg-white rounded-xl shadow p-4 overflow-x-auto'>
-        <table className='min-w-full text-sm'>
-        <thead className='border-b bg-gray-50' >
-        <tr>
-            <th className='text-left py-3 px-4'>Courses</th>
-            <th className='text-left py-3 px-4'>Price</th>
-            <th className='text-left py-3 px-4'>Status</th>
-            <th className='text-left py-3 px-4'>Action</th>
-        </tr>
-     
-        </thead>
-
-        <tbody >
-
-          {creatorCourseData?.map((course , index)=>(
-
-          
-          <tr key={index} className="border-b hover:bg-gray-50 transition duration-200">
-            <td className='py-3 px-4 flex items-center gap-4'>
-                {course?.thumbnail ?<img src={course?.thumbnail} className='w-25 h-14 object-cover rounded-md ' alt="" />:<img src={img} className='w-25 h-14 object-cover rounded-md ' alt="" />}<span>{course?.title}</span>
-                
-            </td>
-           {course?.price ? <td className='px-4 py-3'>₹{course?.price}</td>
-            :<td className='px-4 py-3'>₹ NA</td>}
-
-            <td className='px-4 py-3'><span className={`px-3 py-1 rounded-full text-xs ${course?.isPublished ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"} `}>{course?.isPublished? "Published":"Draft"}</span></td>
-
-            <td className='px-4 py-3'>
-                <FaEdit className='text-gray-600 hover:text-blue-600 cursor-pointer' onClick={()=>navigate(`/editcourse/${course?._id}`)}/>
-            </td>
-          </tr>
-         ))}
-        </tbody>
-
-
-        </table>
-        <p className='text-center text-sm text-gray-400 mt-6'>A list of your recent courses.</p>
-
-       </div>
-
-
-       {/* for small Screen table */}
-       <div className='md:hidden space-y-4'>
-        {creatorCourseData?.map((course , index)=>(
-        <div key={index} className='bg-white rounded-lg shadow p-4 flex flex-col gap-3 '>
-             
-              <div className='flex gap-4 items-center'>
-                {course?.thumbnail?<img src={course?.thumbnail} alt="" className='w-16 h-16 rounded-md object-cover'/>: <img src={img} alt="" className='w-16 h-16 rounded-md object-cover'/>}
-                <div className='flex-1'>
-                    <h2 className='font-medium text-sm'>{course.title}</h2>
-                    {course?.price ?<p className='text-gray-600 text-xs mt-1'>₹{course?.price}</p> : <p className='text-gray-600 text-xs mt-1'>₹ NA</p>}
-                </div>
-                <FaEdit className='text-gray-600 hover:text-blue-600 cursor-pointer' onClick={()=>navigate(`/editcourse/${course?._id}`)}/>
+        {/* Table */}
+        {creatorCourseData?.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "80px 20px", color: "var(--text-muted)" }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🎓</div>
+            <h3 style={{ fontFamily: "Syne, sans-serif", fontSize: 20, fontWeight: 700, color: "var(--text-secondary)", marginBottom: 8 }}>No courses yet</h3>
+            <p style={{ marginBottom: 24 }}>Create your first course to get started</p>
+            <button className="btn-primary" style={{ justifyContent: "center" }} onClick={() => navigate("/createcourse")}>Create Course</button>
+          </div>
+        ) : (
+          <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 20, overflow: "hidden", boxShadow: "var(--shadow)" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid var(--border)", background: "var(--bg-secondary)" }}>
+                  {["Course", "Price", "Status", "Action"].map((h) => (
+                    <th key={h} style={{ padding: "14px 20px", textAlign: "left", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-muted)" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {creatorCourseData?.map((course) => (
+                  <tr key={course._id} style={{ borderBottom: "1px solid var(--border)", transition: "background 0.15s" }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = "var(--bg-secondary)"}
+                    onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
+                    <td style={{ padding: "16px 20px", display: "flex", alignItems: "center", gap: 14 }}>
+                      <img src={course.thumbnail || img} style={{ width: 64, height: 44, objectFit: "cover", borderRadius: 8, border: "1px solid var(--border)", flexShrink: 0 }} alt="" />
+                      <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{course.title}</span>
+                    </td>
+                    <td style={{ padding: "16px 20px", fontSize: 15, fontWeight: 700, color: "var(--text-primary)", fontFamily: "Syne, sans-serif" }}>
+                      {course.price ? `₹${course.price}` : <span style={{ color: "var(--text-muted)", fontSize: 13 }}>—</span>}
+                    </td>
+                    <td style={{ padding: "16px 20px" }}>
+                      <span style={{ padding: "4px 12px", borderRadius: 100, fontSize: 12, fontWeight: 600, background: course.isPublished ? "rgba(67,233,123,0.12)" : "rgba(255,107,107,0.12)", color: course.isPublished ? "#16a34a" : "#dc2626" }}>
+                        {course.isPublished ? "Published" : "Draft"}
+                      </span>
+                    </td>
+                    <td style={{ padding: "16px 20px" }}>
+                      <button onClick={() => navigate(`/editcourse/${course._id}`)} style={{ background: "var(--bg-secondary)", border: "1px solid var(--border)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--text-secondary)", transition: "all 0.2s" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.color = "var(--accent)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-secondary)"; }}>
+                        <FaEdit size={13} /> Edit
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ padding: "12px 20px", fontSize: 13, color: "var(--text-muted)", borderTop: "1px solid var(--border)" }}>
+              {creatorCourseData?.length} course{creatorCourseData?.length !== 1 ? "s" : ""} total
             </div>
-            <span className={`w-fit px-3 py-1 text-xs rounded-full  ${course?.isPublished ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>{course?.isPublished ? "Published":"Draft"}</span>
-        </div>))}
-        <p className='text-center text-sm text-gray-400 mt-4 '>A list of your recent courses.</p>
-       </div>
-
-
+          </div>
+        )}
       </div>
     </div>
-  )
+  );
 }
 
-export default Courses
+export default Courses;

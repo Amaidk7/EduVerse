@@ -22,7 +22,7 @@ function ReviewPage() {
 
        {
         latestReview?.map((review , index)=>(
-            <ReviewCard key={index} comment={review.comment} rating={review.rating} photoUrl={review.user.photoUrl} courseTitle={review.course.title} description={review.user.description} name={review.user.name} />
+            <ReviewCard key={review._id} comment={review.comment} rating={review.rating} photoUrl={review.user.photoUrl} courseTitle={review.course.title} description={review.user.description} name={review.user.name} />
         ))
        }
       </div>
