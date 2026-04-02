@@ -5,6 +5,7 @@ import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
 export const serverUrl = "https://eduverse-bgfe.onrender.com";
 import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import getCurrentUser from "./customHooks/getCurrentUser";
 import { useSelector } from "react-redux";
 import Profile from "./pages/Profile";
@@ -25,17 +26,32 @@ import ViewLectures from "./pages/ViewLectures";
 import MyEnrolledCourses from "./pages/MyEnrolledCourses";
 import getAllReviews from "./customHooks/getAllReviews";
 import SearchWithAi from "./pages/SearchWithAi";
+import { ThemeProvider } from "./context/ThemeContext";
+import CursorGradient from "./component/CursorGradient";
 
-function App() {
+function AppRoutes() {
   getCurrentUser();
   getCreatorCourse();
   getPublishedCourse();
   getAllReviews();
 
   const { userData } = useSelector((state) => state.user);
+
   return (
     <>
-      <ToastContainer />
+      <CursorGradient />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        toastStyle={{
+          background: "var(--bg-card)",
+          color: "var(--text-primary)",
+          border: "1px solid var(--border)",
+          borderRadius: 12,
+          boxShadow: "var(--shadow-hover)",
+          fontSize: 14,
+        }}
+      />
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -137,6 +153,14 @@ function App() {
         />
       </Routes>
     </>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppRoutes />
+    </ThemeProvider>
   );
 }
 

@@ -1,39 +1,130 @@
-import React from 'react'
+import React from "react";
 import { FaStar } from "react-icons/fa6";
-import { useNavigate } from 'react-router-dom';
-function Card({thumbnail , title , category , price , id ,reviews}) {
+import { useNavigate } from "react-router-dom";
 
-   const calculateAvgReview = (reviews) =>{
-       if(!reviews || reviews.length === 0){
-        return 0
-       }
-       const total = reviews.reduce((sum , review)=> sum + review.rating , 0)
-       return (total / reviews.length).toFixed(1)
-    }
+function Card({ thumbnail, title, category, price, id, reviews }) {
+  const calculateAvgReview = (reviews) => {
+    if (!reviews || reviews.length === 0) return 0;
+    const total = reviews.reduce((sum, review) => sum + review.rating, 0);
+    return (total / reviews.length).toFixed(1);
+  };
 
-    const avgRating = calculateAvgReview(reviews)
-    
+  const avgRating = calculateAvgReview(reviews);
+  const navigate = useNavigate();
 
-  const navigate = useNavigate()
   return (
-    <div className='max-w-sm w-full bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border border-gray-300' onClick={()=>navigate(`/viewcourse/${id}`)}>
-        <img src={thumbnail} alt="" className='w-full h-48 object-cover' />
+    <div
+      className="course-card"
+      style={{ width: "100%", maxWidth: 320 }}
+      onClick={() => navigate(`/viewcourse/${id}`)}
+    >
+      {/* Thumbnail */}
+      <div style={{ overflow: "hidden", height: 192, position: "relative" }}>
+        {thumbnail ? (
+          <img
+            src={thumbnail}
+            alt={title}
+            className="card-img"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              background: "var(--bg-secondary)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 40,
+            }}
+          >
+            📚
+          </div>
+        )}
 
-        <div className='p-5 space-y-2'>
-            <h2 className='text-lg font-semibold text-gray-900'>{title}</h2>
-
-            <span className='px-2 py-0.5 bg-gray-100 rounded-full text-gray-700 capitalize'>{category}</span>
-
-            <div className='flex justify-between text-sm text-gray-600 mt-3 px-[10px]'>
-                <span className='font-semibold text-gray-800'>{price}</span>
-                <span className='flex items-center gap-1'> <FaStar className='text-yellow-500' />{avgRating}</span>
-
-            </div>
-
+        {/* Category badge overlay */}
+        <div
+          style={{
+            position: "absolute",
+            top: 12,
+            left: 12,
+          }}
+        >
+          <span
+            className="badge"
+            style={{
+              background: "rgba(255,255,255,0.92)",
+              backdropFilter: "blur(8px)",
+              color: "#333",
+              border: "none",
+              fontSize: 11,
+              fontWeight: 600,
+            }}
+          >
+            {category}
+          </span>
         </div>
-      
+      </div>
+
+      {/* Content */}
+      <div style={{ padding: "18px 20px 20px" }}>
+        <h3
+          style={{
+            fontFamily: "Syne, sans-serif",
+            fontSize: 16,
+            fontWeight: 700,
+            color: "var(--text-primary)",
+            lineHeight: 1.3,
+            marginBottom: 14,
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+          }}
+        >
+          {title}
+        </h3>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingTop: 14,
+            borderTop: "1px solid var(--border)",
+          }}
+        >
+          <span className="price-badge">
+            {price ? `₹${price}` : "Free"}
+          </span>
+          <span
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              fontSize: 13,
+              fontWeight: 600,
+              color: "var(--text-secondary)",
+            }}
+          >
+            <FaStar className="star-gold" style={{ fontSize: 13 }} />
+            {avgRating}
+            {reviews?.length > 0 && (
+              <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>
+                ({reviews.length})
+              </span>
+            )}
+          </span>
+        </div>
+      </div>
     </div>
-  )
+  );
 }
 
-export default Card
+export default Card;

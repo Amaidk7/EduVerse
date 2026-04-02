@@ -1,169 +1,428 @@
-import React, { Children, useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import logo from "../assets/logo.jpg";
-import { IoPersonCircle } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { serverUrl } from "../App";
 import { setUserData } from "../redux/userSlice";
 import { toast } from "react-toastify";
-import { RxHamburgerMenu } from "react-icons/rx";
-import { GiSplitCross } from "react-icons/gi";
+import { useTheme } from "../context/ThemeContext";
+
 function Nav() {
   const { userData } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [show, setShow] = useState(false);
-  const [showHam, setShowHam] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [showMobile, setShowMobile] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const handleLogOut = async () => {
     try {
-      const result = await axios.get(serverUrl + "/api/auth/logout", {
-        withCredentials: true,
-      });
+      await axios.get(serverUrl + "/api/auth/logout", { withCredentials: true });
       dispatch(setUserData(null));
-      console.log(result.data);
-      toast.success("Logout Successfully");
+      toast.success("Logged out successfully");
+      setShowDropdown(false);
+      setShowMobile(false);
     } catch (error) {
-      console.log(error);
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Logout failed");
     }
   };
+
+  const navLinks = [
+    { label: "Home", path: "/" },
+    { label: "Courses", path: "/allcourses" },
+    { label: "AI Search", path: "/search" },
+  ];
+
+  const avatarChar = userData?.name?.slice(0, 1).toUpperCase();
+
   return (
-    <div>
-      <div className="w-[100%] h-[70px] fixed top-0 px-[20px] py-[10px] flex items-center justify-between bg-[#00000047]  z-10">
-        <div className="lg:w-[20%] w-[40%] lg:pl-[50px] ">
+    <>
+      {/* ── NAVBAR ── */}
+      <nav
+        className="nav-bar fixed top-0 left-0 right-0 z-50 h-[68px] flex items-center px-6 lg:px-12 justify-between"
+        style={{ position: "fixed" }}
+      >
+        {/* Logo */}
+        <div
+          className="flex items-center gap-3 cursor-pointer"
+          onClick={() => navigate("/")}
+        >
           <img
             src={logo}
-            alt=""
-            className="w-[60px]  rounded-[5px] border-2 border-white "
+            alt="EduVerse"
+            className="w-9 h-9 rounded-lg object-cover"
+            style={{ border: "1px solid var(--border)" }}
           />
+          <span
+            style={{
+              fontFamily: "Syne, sans-serif",
+              fontWeight: 700,
+              fontSize: 18,
+              color: "var(--text-primary)",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            EduVerse
+          </span>
         </div>
-        <div className="w-[30%] lg:flex items-center justify-center gap-4 hidden">
-          {!userData && (
-            <IoPersonCircle
-              className="w-[50px] h-[50px] fill-black cursor-pointer   "
-              onClick={() => setShow((prev) => !prev)}
-            />
-          )}
-          {userData?.photoUrl ? (
-            <img
-              src={userData?.photoUrl}
-              className="w-[50px] h-[50px] rounded-full text-white flex items-center justify-center text-[20px] border-2 bg-black  border-white cursor-pointer"
-              onClick={() => setShow((prev) => !prev)}
-            />
-          ) : (
-            <div
-              className="w-[50px] h-[50px] rounded-full text-white flex items-center justify-center text-[20px] border-2 bg-black  border-white cursor-pointer"
-              onClick={() => setShow((prev) => !prev)}
-            >
-              {userData?.name.slice(0, 1).toUpperCase()}
-            </div>
-          )}
 
+        {/* Desktop Nav Links */}
+        <div className="hidden lg:flex items-center gap-1">
+          {navLinks.map((link) => (
+            <button
+              key={link.path}
+              onClick={() => navigate(link.path)}
+              style={{
+                background: "none",
+                border: "none",
+                padding: "8px 16px",
+                borderRadius: 10,
+                fontSize: 14,
+                fontWeight: 500,
+                color: "var(--text-secondary)",
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "var(--bg-secondary)";
+                e.currentTarget.style.color = "var(--text-primary)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "none";
+                e.currentTarget.style.color = "var(--text-secondary)";
+              }}
+            >
+              {link.label}
+            </button>
+          ))}
           {userData?.role === "educator" && (
-            <div
-              className="px-[20px] py-[10px] border-2 border-white  text-white bg-[black]  rounded-[10px] text-[18px] font-light cursor-pointer"
+            <button
               onClick={() => navigate("/dashboard")}
+              style={{
+                background: "none",
+                border: "none",
+                padding: "8px 16px",
+                borderRadius: 10,
+                fontSize: 14,
+                fontWeight: 500,
+                color: "var(--text-secondary)",
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "var(--bg-secondary)";
+                e.currentTarget.style.color = "var(--text-primary)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "none";
+                e.currentTarget.style.color = "var(--text-secondary)";
+              }}
             >
               Dashboard
-            </div>
-          )}
-          {!userData ? (
-            <span
-              className="px-[20px] py-[10px] border-2 border-white text-white rounded-[10px] text-[18px] font-light cursor-pointer bg-[#000000d5]"
-              onClick={() => navigate("/login")}
-            >
-              Login
-            </span>
-          ) : (
-            <span
-              className="px-[20px] py-[10px] bg-white text-black rounded-[10px] shadow-sm shadow-black text-[18px] cursor-pointer"
-              onClick={handleLogOut}
-            >
-              LogOut
-            </span>
-          )}
-          {show && (
-            <div className="absolute top-[110%] right-[15%] flex items-center flex-col justify-center gap-2 text-[16px] rounded-md bg-[white] px-[15px] py-[10px] border-[2px]  border-black hover:border-white hover:text-white cursor-pointer hover:bg-black">
-              <span
-                className="bg-[black] text-white  px-[30px] py-[10px] rounded-2xl hover:bg-gray-600"
-                onClick={() => navigate("/profile")}
-              >
-                My Profile
-              </span>
-              <span
-                className="bg-[black] text-white  px-[30px] py-[10px] rounded-2xl hover:bg-gray-600"
-                onClick={() => navigate("/mycourses")}
-              >
-                My Courses
-              </span>
-            </div>
+            </button>
           )}
         </div>
-        <RxHamburgerMenu
-          className="w-[35px] h-[35px] lg:hidden text-white cursor-pointer"
-          onClick={() => setShowHam((prev) => !prev)}
-        />
 
+        {/* Right Side */}
+        <div className="flex items-center gap-3">
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className={`theme-toggle ${theme === "dark" ? "dark" : ""}`}
+            title="Toggle theme"
+          >
+            <div className="theme-toggle-thumb">
+              {theme === "dark" ? "🌙" : "☀️"}
+            </div>
+          </button>
+
+          {/* Auth / Profile */}
+          {!userData ? (
+            <div className="hidden lg:flex items-center gap-2">
+              <button
+                className="btn-outline"
+                style={{ padding: "8px 20px", fontSize: 14 }}
+                onClick={() => navigate("/login")}
+              >
+                Login
+              </button>
+              <button
+                className="btn-primary"
+                style={{ padding: "8px 20px", fontSize: 14 }}
+                onClick={() => navigate("/signup")}
+              >
+                Sign Up
+              </button>
+            </div>
+          ) : (
+            <div className="relative hidden lg:block" ref={dropdownRef}>
+              <button
+                onClick={() => setShowDropdown((p) => !p)}
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: "50%",
+                  border: "2px solid var(--border-hover)",
+                  overflow: "hidden",
+                  cursor: "pointer",
+                  background: "var(--accent)",
+                  color: "white",
+                  fontWeight: 700,
+                  fontSize: 15,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "all 0.2s",
+                }}
+              >
+                {userData?.photoUrl ? (
+                  <img
+                    src={userData.photoUrl}
+                    alt=""
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : (
+                  avatarChar
+                )}
+              </button>
+
+              {showDropdown && (
+                <div
+                  className="dropdown-menu absolute right-0 mt-2 w-44"
+                  style={{ top: "100%" }}
+                >
+                  <div
+                    style={{
+                      padding: "12px 18px 8px",
+                      borderBottom: "1px solid var(--border)",
+                    }}
+                  >
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
+                      {userData.name}
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                      {userData.role}
+                    </div>
+                  </div>
+                  <div
+                    className="dropdown-item"
+                    onClick={() => { navigate("/profile"); setShowDropdown(false); }}
+                  >
+                    My Profile
+                  </div>
+                  <div
+                    className="dropdown-item"
+                    onClick={() => { navigate("/mycourses"); setShowDropdown(false); }}
+                  >
+                    My Courses
+                  </div>
+                  <div
+                    className="dropdown-item"
+                    onClick={handleLogOut}
+                    style={{ color: "#ef4444" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#fff1f1")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "")}
+                  >
+                    Log Out
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Hamburger */}
+          <button
+            className="lg:hidden flex flex-col gap-1.5 p-2"
+            onClick={() => setShowMobile(true)}
+            style={{ background: "none", border: "none", cursor: "pointer" }}
+          >
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                style={{
+                  display: "block",
+                  width: 22,
+                  height: 2,
+                  background: "var(--text-primary)",
+                  borderRadius: 2,
+                  transition: "all 0.2s",
+                }}
+              />
+            ))}
+          </button>
+        </div>
+      </nav>
+
+      {/* ── MOBILE MENU ── */}
+      {showMobile && (
         <div
-          className={`fixed  top-0 left-0 w-[100vw] h-[100vh] bg-[#000000d6] flex items-center justify-center flex-col gap-5 z-10 lg:hidden ${showHam ? "translate-x-[0] transition duration-600" : "translate-x-[-100%] transition duration-600"}`}
+          className="sidebar-overlay fixed inset-0 z-50 lg:hidden"
+          onClick={() => setShowMobile(false)}
         >
-          <GiSplitCross
-            className="w-[35px] h-[35px] fill-white absolute top-5 right-[4%]"
-            onClick={() => setShowHam((prev) => !prev)}
-          />
-          {!userData && (
-            <IoPersonCircle className="w-[50px] h-[50px] fill-black cursor-pointer   " />
-          )}
-          {userData?.photoUrl ? (
-            <img
-              src={userData?.photoUrl}
-              className="w-[50px] h-[50px] rounded-full text-white flex items-center justify-center text-[20px] border-2 bg-black  border-white cursor-pointer"
-            />
-          ) : (
-            <div className="w-[50px] h-[50px] rounded-full text-white flex items-center justify-center text-[20px] border-2 bg-black  border-white cursor-pointer">
-              {userData?.name.slice(0, 1).toUpperCase()}
-            </div>
-          )}
           <div
-            className="w-[200px] h-[65px]  border-2 border-white  text-white bg-[black] flex items-center justify-center  rounded-[10px] text-[18px] font-light cursor-pointer"
-            onClick={() => navigate("/profile")}
+            className="mobile-menu absolute right-0 top-0 h-full w-72 p-8 flex flex-col gap-4 animate-slide-down"
+            style={{ borderLeft: "1px solid var(--border)" }}
+            onClick={(e) => e.stopPropagation()}
           >
-            My Profile
-          </div>
-          <div
-            className="w-[200px] h-[65px]  border-2 border-white  text-white bg-[black] flex items-center justify-center  rounded-[10px] text-[18px] font-light cursor-pointer"
-            onClick={() => navigate("/mycourses")}
-          >
-            My Courses
-          </div>
-          {userData?.role === "educator" && (
-            <div
-              className="w-[200px] h-[65px] border-2 border-white flex items-center justify-center  text-white bg-[black]  rounded-[10px] text-[18px] font-light cursor-pointer"
-              onClick={() => navigate("/dashboard")}
+            {/* Close */}
+            <button
+              onClick={() => setShowMobile(false)}
+              style={{
+                alignSelf: "flex-end",
+                background: "var(--bg-secondary)",
+                border: "none",
+                borderRadius: 8,
+                width: 32,
+                height: 32,
+                cursor: "pointer",
+                fontSize: 16,
+                color: "var(--text-primary)",
+              }}
             >
-              Dashboard
+              ✕
+            </button>
+
+            {/* User info */}
+            {userData && (
+              <div
+                style={{
+                  padding: "12px 16px",
+                  background: "var(--bg-secondary)",
+                  borderRadius: 12,
+                  border: "1px solid var(--border)",
+                }}
+              >
+                <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>
+                  {userData.name}
+                </div>
+                <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                  {userData.role}
+                </div>
+              </div>
+            )}
+
+            {/* Links */}
+            {navLinks.map((link) => (
+              <button
+                key={link.path}
+                onClick={() => { navigate(link.path); setShowMobile(false); }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  textAlign: "left",
+                  fontSize: 16,
+                  fontWeight: 500,
+                  color: "var(--text-primary)",
+                  cursor: "pointer",
+                  padding: "8px 0",
+                  borderBottom: "1px solid var(--border)",
+                }}
+              >
+                {link.label}
+              </button>
+            ))}
+
+            {userData?.role === "educator" && (
+              <button
+                onClick={() => { navigate("/dashboard"); setShowMobile(false); }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  textAlign: "left",
+                  fontSize: 16,
+                  fontWeight: 500,
+                  color: "var(--text-primary)",
+                  cursor: "pointer",
+                  padding: "8px 0",
+                  borderBottom: "1px solid var(--border)",
+                }}
+              >
+                Dashboard
+              </button>
+            )}
+
+            {userData && (
+              <>
+                <button
+                  onClick={() => { navigate("/profile"); setShowMobile(false); }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    textAlign: "left",
+                    fontSize: 16,
+                    fontWeight: 500,
+                    color: "var(--text-primary)",
+                    cursor: "pointer",
+                    padding: "8px 0",
+                    borderBottom: "1px solid var(--border)",
+                  }}
+                >
+                  My Profile
+                </button>
+                <button
+                  onClick={() => { navigate("/mycourses"); setShowMobile(false); }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    textAlign: "left",
+                    fontSize: 16,
+                    fontWeight: 500,
+                    color: "var(--text-primary)",
+                    cursor: "pointer",
+                    padding: "8px 0",
+                    borderBottom: "1px solid var(--border)",
+                  }}
+                >
+                  My Courses
+                </button>
+              </>
+            )}
+
+            <div className="mt-auto flex flex-col gap-2">
+              {!userData ? (
+                <>
+                  <button className="btn-outline w-full justify-center" onClick={() => { navigate("/login"); setShowMobile(false); }}>
+                    Login
+                  </button>
+                  <button className="btn-primary w-full justify-center" onClick={() => { navigate("/signup"); setShowMobile(false); }}>
+                    Sign Up
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={handleLogOut}
+                  style={{
+                    background: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    color: "#ef4444",
+                    borderRadius: 10,
+                    padding: "10px",
+                    cursor: "pointer",
+                    fontWeight: 500,
+                    fontSize: 14,
+                  }}
+                >
+                  Log Out
+                </button>
+              )}
             </div>
-          )}
-          {!userData ? (
-            <span
-              className="w-[200px] h-[65px] border-2 border-white flex items-center justify-center  text-white bg-[black]  rounded-[10px] text-[18px] font-light cursor-pointer"
-              onClick={() => navigate("/login")}
-            >
-              Login
-            </span>
-          ) : (
-            <span
-              className="w-[200px] h-[65px] border-2 border-white flex items-center justify-center  text-white bg-[black]  rounded-[10px] text-[18px] font-light cursor-pointer"
-              onClick={handleLogOut}
-            >
-              LogOut
-            </span>
-          )}
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }
 

@@ -1,112 +1,272 @@
-import React from 'react'
-import Nav from '../component/Nav'
-import { FaArrowLeftLong } from "react-icons/fa6";
-import { useNavigate } from 'react-router-dom';
-import ai from "../assets/SearchAi.png"
-import { useSelector } from 'react-redux';
-import { useState } from 'react';
-import { useEffect } from 'react';
-import Card from '../component/Card';
+import React, { useState, useEffect } from "react";
+import Nav from "../component/Nav";
+import { useNavigate } from "react-router-dom";
+import ai from "../assets/SearchAi.png";
+import { useSelector } from "react-redux";
+import Card from "../component/Card";
+
+const CATEGORIES = [
+  "App Development",
+  "AI/ML",
+  "AI Tools",
+  "Data Science",
+  "Data Analytics",
+  "Ethical Hacking",
+  "UI UX Designing",
+  "Web Development",
+  "Others",
+];
+
 function AllCourses() {
-    const navigate = useNavigate()
-    const {courseData} = useSelector(state=>state.course)
-    const [category,setCategory] = useState([])
-    const [filterCourses,setFilterCourses] = useState([])
-    const [isSidebarVisible,setIsSidebarVisible] = useState(false)
+  const navigate = useNavigate();
+  const { courseData } = useSelector((state) => state.course);
+  const [category, setCategory] = useState([]);
+  const [filterCourses, setFilterCourses] = useState([]);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
-    const toggleCategory = (e)=>{
-        if(category.includes(e.target.value) ){
-            setCategory(prev => prev.filter(c => c !== e.target.value ))
-        }
-        else {
-            setCategory(prev => [...prev,e.target.value])
-        }
+  const toggleCategory = (val) => {
+    setCategory((prev) =>
+      prev.includes(val) ? prev.filter((c) => c !== val) : [...prev, val]
+    );
+  };
+
+  useEffect(() => {
+    setFilterCourses(courseData);
+  }, [courseData]);
+
+  useEffect(() => {
+    let copy = courseData?.slice() || [];
+    if (category.length > 0) {
+      copy = copy.filter((c) => category.includes(c.category));
     }
-
-    const applyFilter = ()=>{
-        let courseCopy = courseData?.slice()
-         if(category.length > 0 ){
-            courseCopy = courseCopy.filter(c => category.includes(c.category))
-         }
-         setFilterCourses(courseCopy)
-    }
-
-    useEffect(()=>{
-      setFilterCourses(courseData)
-    },[courseData])
-
-    useEffect(()=>{
-        applyFilter()
-    }, [category])
-
+    setFilterCourses(copy);
+  }, [category, courseData]);
 
   return (
-    <div className='flex min-h-screen bg-gray-50'>
-      <Nav/>
+    <div style={{ minHeight: "100vh", background: "var(--bg-primary)", display: "flex" }}>
+      <Nav />
 
-      <button className='fixed top-20 left-4 z-50 bg-white text-black px-3 py-1 rounded md:hidden border-2 border-black' onClick={()=>setIsSidebarVisible(prev=>!prev)}>
-        {isSidebarVisible ? 'Hide' : 'Show'} Filters
+      {/* Mobile Filter Toggle */}
+      <button
+        className="lg:hidden"
+        onClick={() => setIsSidebarVisible((p) => !p)}
+        style={{
+          position: "fixed",
+          top: 80,
+          left: 16,
+          zIndex: 40,
+          background: "var(--text-primary)",
+          color: "var(--bg-primary)",
+          border: "none",
+          borderRadius: 10,
+          padding: "8px 16px",
+          fontSize: 13,
+          fontWeight: 600,
+          cursor: "pointer",
+          boxShadow: "var(--shadow)",
+        }}
+      >
+        {isSidebarVisible ? "✕ Filters" : "⚙ Filters"}
       </button>
 
-      {/* sideBar */}
+      {/* Mobile Overlay */}
+      {isSidebarVisible && (
+        <div
+          className="sidebar-overlay lg:hidden fixed inset-0 z-30"
+          onClick={() => setIsSidebarVisible(false)}
+        />
+      )}
 
-      <aside className={`w-[260px] h-screen overflow-y-auto bg-black fixed  top-0 left-0 p-6 py-[130px] border-r border-gray-200 shadow-md transition-transform duration-300 z-5 ${isSidebarVisible ? "translate-x-0 " : "-translate-x-full"} md:block md:translate-x-0`} >
-        <h2 className='text-xl font-bold flex items-center justify-center gap-2 text-gray-50 mb-6'><FaArrowLeftLong className='text-white' onClick={()=>navigate("/")} />Filter by Category</h2>
+      {/* Sidebar */}
+      <aside
+        className={`ev-sidebar fixed top-0 left-0 h-screen overflow-y-auto z-40 transition-transform duration-300
+          ${isSidebarVisible ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
+        style={{ width: 260, paddingTop: 88 }}
+      >
+        <div style={{ padding: "0 20px 40px" }}>
+          {/* AI Search */}
+          <button
+            className="btn-primary"
+            style={{ width: "100%", justifyContent: "center", marginBottom: 24, fontSize: 14 }}
+            onClick={() => navigate("/search")}
+          >
+            <img src={ai} alt="" style={{ width: 20, height: 20, borderRadius: "50%" }} />
+            Search with AI
+          </button>
 
-        <form action="" onSubmit={(e)=>e.preventDefault()} className='space-y-4 text-sm  bg-gray-600 border-white text-[white] border  p-[20px] rounded-2xl'>
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "var(--text-muted)",
+              marginBottom: 12,
+            }}
+          >
+            Filter by Category
+          </div>
 
-            <button className='px-[10px] py-[10px]  bg-black text-white  rounded-[10px] text-[15px] font-light flex items-center justify-center gap-2 cursor-pointer' onClick={()=>navigate("/search")}>Search with AI <img src={ai} className='w-[30px] h-[30px] rounded-full' alt="" /></button>
+          {/* Clear Filter */}
+          {category.length > 0 && (
+            <button
+              onClick={() => setCategory([])}
+              style={{
+                background: "none",
+                border: "1px solid var(--border)",
+                borderRadius: 8,
+                padding: "6px 12px",
+                fontSize: 12,
+                color: "var(--accent)",
+                cursor: "pointer",
+                marginBottom: 12,
+                fontWeight: 600,
+              }}
+            >
+              Clear all ({category.length})
+            </button>
+          )}
 
-            <label htmlFor="" className='flex items-center gap-3 cursor-pointer hover:text-gray-200 transition'>
-                <input type="checkbox" className='accent-black w-4 h-4 rounded-md' value={'App Development'} onChange={toggleCategory} /> App Development
-            </label>
-           <label  className="flex items-center gap-3 cursor-pointer hover:text-gray-200 transition">
-              <input type="checkbox" className="accent-black w-4 h-4 rounded-md" value={'AI/ML'} onChange={toggleCategory}/>
-              AI/ML
-            </label>
-            
-            <label  className="flex items-center gap-3 cursor-pointer hover:text-gray-200 transition">
-              <input type="checkbox" className="accent-black w-4 h-4 rounded-md" value={'AI Tools'} onChange={toggleCategory}  />
-              AI Tools
-            </label>
-            <label  className="flex items-center gap-3 cursor-pointer hover:text-gray-200 transition">
-              <input type="checkbox" className="accent-black w-4 h-4 rounded-md" value={'Data Science'} onChange={toggleCategory} />
-              Data Science
-            </label>
-            <label  className="flex items-center gap-3 cursor-pointer hover:text-gray-200 transition">
-              <input type="checkbox" className="accent-black w-4 h-4 rounded-md" value={'Data Analytics'} onChange={toggleCategory} />
-              Data Analytics
-            </label>
-            <label  className="flex items-center gap-3 cursor-pointer hover:text-gray-200 transition">
-              <input type="checkbox" className="accent-black w-4 h-4 rounded-md" value={'Ethical Hacking'} onChange={toggleCategory} />
-              Ethical Hacking
-            </label>
-            <label  className="flex items-center gap-3 cursor-pointer hover:text-gray-200 transition">
-              <input type="checkbox" className="accent-black w-4 h-4 rounded-md" value={'UI UX Designing'} onChange={toggleCategory} />
-              UI UX Designing
-            </label>
-            <label  className="flex items-center gap-3 cursor-pointer hover:text-gray-200 transition">
-              <input type="checkbox" className="accent-black w-4 h-4 rounded-md" value={'Web Development'} onChange={toggleCategory} />
-              Web Development
-            </label>
-            <label  className="flex items-center gap-3 cursor-pointer hover:text-gray-200 transition">
-              <input type="checkbox" className="accent-black w-4 h-4 rounded-md" value={'Others'} onChange={toggleCategory} />
-              Others
-            </label>
-        </form>
-
-         
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {CATEGORIES.map((cat) => (
+              <label
+                key={cat}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "9px 12px",
+                  borderRadius: 10,
+                  cursor: "pointer",
+                  background: category.includes(cat) ? "rgba(108,99,255,0.08)" : "transparent",
+                  border: `1px solid ${category.includes(cat) ? "var(--accent)" : "transparent"}`,
+                  transition: "all 0.2s",
+                  fontSize: 14,
+                  color: category.includes(cat) ? "var(--accent)" : "var(--text-secondary)",
+                  fontWeight: category.includes(cat) ? 600 : 400,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  className="ev-check"
+                  checked={category.includes(cat)}
+                  onChange={() => toggleCategory(cat)}
+                  style={{ display: "none" }}
+                />
+                <span
+                  style={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: 5,
+                    border: `2px solid ${category.includes(cat) ? "var(--accent)" : "var(--border-hover)"}`,
+                    background: category.includes(cat) ? "var(--accent)" : "transparent",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 10,
+                    color: "white",
+                    flexShrink: 0,
+                    transition: "all 0.2s",
+                  }}
+                >
+                  {category.includes(cat) ? "✓" : ""}
+                </span>
+                {cat}
+              </label>
+            ))}
+          </div>
+        </div>
       </aside>
 
-      <main className='w-full transition-all duration-300 py-[130px] md:pl-[300px]  flex items-start justify-center md:justify-start flex-wrap gap-6 px-[10px]'>
-        {
-         filterCourses?.map((course , index)=>(
-            <Card key={index} thumbnail={course.thumbnail} title={course.title} category={course.category} price={course.price} id={course._id} reviews={course.reviews} />
-         ))
-        }
+      {/* Main Content */}
+      <main
+        style={{
+          flex: 1,
+          paddingTop: 96,
+          paddingLeft: 0,
+          paddingRight: 24,
+          paddingBottom: 48,
+          marginLeft: 260,
+        }}
+        className="lg:ml-[260px] ml-0 px-4"
+      >
+        {/* Header */}
+        <div style={{ marginBottom: 32, paddingLeft: 8 }}>
+          <div className="section-label" style={{ marginBottom: 8 }}>
+            All Courses
+          </div>
+          <h1
+            style={{
+              fontFamily: "Syne, sans-serif",
+              fontSize: 32,
+              fontWeight: 800,
+              color: "var(--text-primary)",
+              marginBottom: 8,
+            }}
+          >
+            {category.length > 0
+              ? `${filterCourses?.length || 0} courses found`
+              : `Explore ${courseData?.length || 0} courses`}
+          </h1>
+          <p style={{ color: "var(--text-muted)", fontSize: 15 }}>
+            {category.length > 0
+              ? `Filtered by: ${category.join(", ")}`
+              : "Discover courses that match your goals"}
+          </p>
+        </div>
+
+        {/* Grid */}
+        {filterCourses?.length > 0 ? (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+              gap: 24,
+            }}
+          >
+            {filterCourses.map((course, index) => (
+              <div
+                key={index}
+                className="animate-fade-up"
+                style={{ animationDelay: `${Math.min(index * 0.05, 0.4)}s` }}
+              >
+                <Card
+                  thumbnail={course.thumbnail}
+                  title={course.title}
+                  category={course.category}
+                  price={course.price}
+                  id={course._id}
+                  reviews={course.reviews}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "80px 20px",
+              color: "var(--text-muted)",
+            }}
+          >
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+            <h3
+              style={{
+                fontFamily: "Syne, sans-serif",
+                fontSize: 20,
+                fontWeight: 700,
+                color: "var(--text-secondary)",
+                marginBottom: 8,
+              }}
+            >
+              No courses found
+            </h3>
+            <p style={{ fontSize: 15 }}>Try adjusting your filters or search with AI</p>
+          </div>
+        )}
       </main>
     </div>
-  )
+  );
 }
 
-export default AllCourses
+export default AllCourses;

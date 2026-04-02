@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import logo from "../assets/logo.jpg";
 import google from "../assets/google.jpg";
-import { IoEyeOutline } from "react-icons/io5";
-import { IoEye } from "react-icons/io5";
+import { IoEyeOutline, IoEye } from "react-icons/io5";
+import { FaArrowLeftLong } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
 import axios from "axios";
@@ -12,14 +12,12 @@ import { useDispatch } from "react-redux";
 import { setUserData } from "../redux/userSlice";
 import { signInWithPopup } from "@firebase/auth";
 import { auth, provider } from "../../utils/firebase";
-import { FaArrowLeftLong } from "react-icons/fa6";
 
 function Login() {
   const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -29,15 +27,13 @@ function Login() {
       const result = await axios.post(
         serverUrl + "/api/user/login",
         { email, password },
-        { withCredentials: true },
+        { withCredentials: true }
       );
-
       dispatch(setUserData(result.data));
       setLoading(false);
       toast.success("Login Successfully");
       navigate("/");
     } catch (error) {
-      console.log(error);
       setLoading(false);
       toast.error(error.response?.data?.message || "Login failed");
     }
@@ -46,134 +42,250 @@ function Login() {
   const googleLogin = async () => {
     try {
       const response = await signInWithPopup(auth, provider);
-
       const user = response.user;
-      const name = user.displayName;
-      const googleEmail = user.email;
-      const role = "";
-
       const result = await axios.post(
         serverUrl + "/api/auth/googleauth",
-        { name, email: googleEmail, role },
-        { withCredentials: true },
+        { name: user.displayName, email: user.email, role: "" },
+        { withCredentials: true }
       );
-
       dispatch(setUserData(result.data));
       navigate("/");
       toast.success("Login Successfully");
     } catch (error) {
-      console.log(error);
       toast.error(error.response?.data?.message || "Google Login Failed");
     }
   };
 
   return (
-    <div className="bg-[#dddbdb] w-screen h-screen flex items-center justify-center ">
-      <form
-        className="w-[90%] md:w-200 h-150 bg-[white] shadow-xl rounded-2xl flex relative"
-        onSubmit={(e) => e.preventDefault()}
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "var(--bg-primary)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 20,
+      }}
+    >
+      <div
+        className="animate-scale-in"
+        style={{
+          width: "100%",
+          maxWidth: 880,
+          display: "flex",
+          background: "var(--bg-card)",
+          borderRadius: 24,
+          overflow: "hidden",
+          border: "1px solid var(--border)",
+          boxShadow: "var(--shadow-hover)",
+          minHeight: 540,
+        }}
       >
-        <FaArrowLeftLong
-          className="absolute top-[16%] left-[5%] w-5.5 h-5.5 cursor-pointer"
-          onClick={() => navigate("/")}
-        />
+        {/* Left Form */}
+        <div
+          style={{
+            flex: 1,
+            padding: "48px 40px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            gap: 20,
+          }}
+        >
+          {/* Back */}
+          <button
+            onClick={() => navigate("/")}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "var(--text-secondary)",
+              fontSize: 14,
+              marginBottom: 4,
+              alignSelf: "flex-start",
+            }}
+          >
+            <FaArrowLeftLong /> Back
+          </button>
 
-        <div className="md:w-[50%] w-full h-full flex flex-col items-center justify-center gap-3 ">
-          <div>
-            <h1 className="font-semibold text-[black] text-2xl">
+          <div style={{ marginBottom: 4 }}>
+            <h1
+              style={{
+                fontFamily: "Syne, sans-serif",
+                fontSize: 28,
+                fontWeight: 800,
+                color: "var(--text-primary)",
+                marginBottom: 4,
+              }}
+            >
               Welcome back
             </h1>
-            <h2 className="text-[#999797] text-[18px]">Login your account</h2>
+            <p style={{ color: "var(--text-muted)", fontSize: 15 }}>
+              Login to continue your learning journey
+            </p>
           </div>
 
-          <div className="flex flex-col gap-1 w-[80%] items-start justify-center px-3">
-            <label htmlFor="email" className="font-semibold">
+          {/* Email */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)" }}>
               Email
             </label>
             <input
-              id="email"
-              type="text"
-              className="border w-full h-8.75 border-[#e7e6e6] text-[15px] px-5"
-              placeholder="Your Email"
-              onChange={(e) => setEmail(e.target.value)}
+              className="ev-input"
+              type="email"
+              placeholder="your@email.com"
               value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
             />
           </div>
 
-          <div className="flex flex-col gap-1 w-[80%] items-start justify-center px-3 relative">
-            <label htmlFor="password" className="font-semibold">
+          {/* Password */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)" }}>
               Password
             </label>
-
-            <input
-              id="password"
-              type={show ? "text" : "password"}
-              className="border w-full h-8.75 border-[#e7e6e6] text-[15px] px-5"
-              placeholder="Your password"
-              onChange={(e) => setPassword(e.target.value)}
-              value={password}
-            />
-
-            {!show ? (
-              <IoEyeOutline
-                className="absolute w-5 h-5 cursor-pointer right-[5%] bottom-[10%]"
-                onClick={() => setShow((prev) => !prev)}
+            <div style={{ position: "relative" }}>
+              <input
+                className="ev-input"
+                type={show ? "text" : "password"}
+                placeholder="Your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                style={{ paddingRight: 42 }}
               />
-            ) : (
-              <IoEye
-                className="absolute w-5 h-5 cursor-pointer right-[5%] bottom-[10%]"
-                onClick={() => setShow((prev) => !prev)}
-              />
-            )}
-          </div>
-
-          <button
-            className="w-[80%] h-10 bg-black text-white cursor-pointer flex items-center justify-center rounded-[5px]"
-            disabled={loading}
-            onClick={handleLogin}
-          >
-            {loading ? <ClipLoader size={30} color="white" /> : "Login"}
-          </button>
-
-          <span
-            className="text-[13px] cursor-pointer text-[#585757]"
-            onClick={() => navigate("/forget")}
-          >
-            Forget your password ?
-          </span>
-
-          <div className="w-[80%] flex items-center gap-2">
-            <div className="w-[25%] h-[0.5px] bg-[#c4c4c4]"></div>
-            <div className="w-[50%] text-[15px] text-[#6f6f6f] flex items-center justify-center ">
-              Or continue
+              <button
+                onClick={() => setShow((p) => !p)}
+                style={{
+                  position: "absolute",
+                  right: 14,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--text-muted)",
+                  display: "flex",
+                }}
+              >
+                {show ? <IoEye size={18} /> : <IoEyeOutline size={18} />}
+              </button>
             </div>
-            <div className="w-[25%] h-[0.5px] bg-[#c4c4c4]"></div>
           </div>
 
-          <div
-            className="w-[80%] h-10 border border-[black] rounded-[5px] flex items-center justify-center cursor-pointer"
-            onClick={googleLogin}
-          >
-            <img src={google} className="w-6.25" alt="" />
-            <span className="text-[18px] text-gray-500">oogle</span>
-          </div>
-
-          <div className="text-[#6f6f6f]">
-            Create new account
+          {/* Forgot */}
+          <div style={{ textAlign: "right", marginTop: -10 }}>
             <span
-              className="underline underline-offset-1 text-[black]"
-              onClick={() => navigate("/signup")}
+              onClick={() => navigate("/forget")}
+              style={{
+                fontSize: 13,
+                color: "var(--accent)",
+                cursor: "pointer",
+                fontWeight: 500,
+              }}
             >
-              SignUp
+              Forgot password?
             </span>
           </div>
+
+          {/* Login Button */}
+          <button
+            className="btn-primary"
+            style={{ justifyContent: "center", height: 46, fontSize: 15 }}
+            onClick={handleLogin}
+            disabled={loading}
+          >
+            {loading ? <ClipLoader size={22} color="var(--bg-primary)" /> : "Login"}
+          </button>
+
+          {/* Divider */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+            <span style={{ fontSize: 13, color: "var(--text-muted)" }}>or</span>
+            <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+          </div>
+
+          {/* Google */}
+          <button
+            className="btn-outline"
+            style={{ justifyContent: "center", height: 46 }}
+            onClick={googleLogin}
+          >
+            <img src={google} alt="" style={{ width: 20, height: 20, borderRadius: 4 }} />
+            Continue with Google
+          </button>
+
+          <p style={{ fontSize: 14, color: "var(--text-muted)", textAlign: "center" }}>
+            Don't have an account?{" "}
+            <span
+              onClick={() => navigate("/signup")}
+              style={{ color: "var(--accent)", fontWeight: 600, cursor: "pointer" }}
+            >
+              Sign Up
+            </span>
+          </p>
         </div>
 
-        <div className="w-[50%] h-full rounded-r-2xl bg-[black] md:flex items-center justify-center flex-col hidden">
-          <img src={logo} alt="logo" className="w-30 shadow-2xl" />
-          <span className="text-2xl text-white">VIRTUAL COURSES</span>
+        {/* Right Panel — hidden on mobile */}
+        <div
+          className="hidden md:flex"
+          style={{
+            width: 320,
+            background: "var(--text-primary)",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 16,
+            padding: 40,
+            flexShrink: 0,
+          }}
+        >
+          <img
+            src={logo}
+            alt=""
+            style={{ width: 72, height: 72, borderRadius: 16, objectFit: "cover" }}
+          />
+          <span
+            style={{
+              fontFamily: "Syne, sans-serif",
+              fontSize: 22,
+              fontWeight: 800,
+              color: "var(--bg-primary)",
+              textAlign: "center",
+            }}
+          >
+            EduVerse
+          </span>
+          <p
+            style={{
+              fontSize: 14,
+              color: "rgba(255,255,255,0.5)",
+              textAlign: "center",
+              lineHeight: 1.7,
+            }}
+          >
+            Learn from world-class instructors. Build real skills. Advance your career.
+          </p>
+
+          {/* Stats */}
+          <div style={{ display: "flex", gap: 24, marginTop: 8 }}>
+            {[["50+", "Courses"], ["1k+", "Students"], ["4.8★", "Rating"]].map(([val, label]) => (
+              <div key={label} style={{ textAlign: "center" }}>
+                <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 18, color: "var(--bg-primary)" }}>
+                  {val}
+                </div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>
+                  {label}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </form>
+      </div>
     </div>
   );
 }
