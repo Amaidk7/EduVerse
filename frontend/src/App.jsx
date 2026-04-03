@@ -28,6 +28,8 @@ import getAllReviews from "./customHooks/getAllReviews";
 import SearchWithAi from "./pages/SearchWithAi";
 import { ThemeProvider } from "./context/ThemeContext";
 import CursorGradient from "./component/CursorGradient";
+// ✅ Student Dashboard import
+import StudentDashboard from "./pages/StudentDashboard";
 
 function AppRoutes() {
   getCurrentUser();
@@ -81,6 +83,13 @@ function AppRoutes() {
             ) : (
               <Navigate to={"/signup"} />
             )
+          }
+        />
+        {/* ✅ Student Dashboard route */}
+        <Route
+          path="/student-dashboard"
+          element={
+            userData ? <StudentDashboard /> : <Navigate to={"/signup"} />
           }
         />
         <Route

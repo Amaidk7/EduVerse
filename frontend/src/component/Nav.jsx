@@ -17,7 +17,6 @@ function Nav() {
   const [showMobile, setShowMobile] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -47,6 +46,19 @@ function Nav() {
   ];
 
   const avatarChar = userData?.name?.slice(0, 1).toUpperCase();
+  const isEducator = userData?.role === "educator";
+
+  const mobileNavBtnStyle = {
+    background: "none",
+    border: "none",
+    textAlign: "left",
+    fontSize: 16,
+    fontWeight: 500,
+    color: "var(--text-primary)",
+    cursor: "pointer",
+    padding: "8px 0",
+    borderBottom: "1px solid var(--border)",
+  };
 
   return (
     <>
@@ -108,7 +120,9 @@ function Nav() {
               {link.label}
             </button>
           ))}
-          {userData?.role === "educator" && (
+
+          {/* Educator Dashboard link */}
+          {isEducator && (
             <button
               onClick={() => navigate("/dashboard")}
               style={{
@@ -169,6 +183,7 @@ function Nav() {
             </div>
           ) : (
             <div className="relative hidden lg:block" ref={dropdownRef}>
+              {/* Avatar button */}
               <button
                 onClick={() => setShowDropdown((p) => !p)}
                 style={{
@@ -199,11 +214,13 @@ function Nav() {
                 )}
               </button>
 
+              {/* Dropdown */}
               {showDropdown && (
                 <div
-                  className="dropdown-menu absolute right-0 mt-2 w-44"
+                  className="dropdown-menu absolute right-0 mt-2 w-48"
                   style={{ top: "100%" }}
                 >
+                  {/* User info header */}
                   <div
                     style={{
                       padding: "12px 18px 8px",
@@ -213,22 +230,35 @@ function Nav() {
                     <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
                       {userData.name}
                     </div>
-                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)", textTransform: "capitalize" }}>
                       {userData.role}
                     </div>
                   </div>
+
                   <div
                     className="dropdown-item"
                     onClick={() => { navigate("/profile"); setShowDropdown(false); }}
                   >
                     My Profile
                   </div>
+
+                  {/* ✅ Student Dashboard — only for students */}
+                  {!isEducator && (
+                    <div
+                      className="dropdown-item"
+                      onClick={() => { navigate("/student-dashboard"); setShowDropdown(false); }}
+                    >
+                      My Dashboard
+                    </div>
+                  )}
+
                   <div
                     className="dropdown-item"
                     onClick={() => { navigate("/mycourses"); setShowDropdown(false); }}
                   >
                     My Courses
                   </div>
+
                   <div
                     className="dropdown-item"
                     onClick={handleLogOut}
@@ -308,47 +338,28 @@ function Nav() {
                 <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>
                   {userData.name}
                 </div>
-                <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                <div style={{ fontSize: 13, color: "var(--text-muted)", textTransform: "capitalize" }}>
                   {userData.role}
                 </div>
               </div>
             )}
 
-            {/* Links */}
+            {/* Nav links */}
             {navLinks.map((link) => (
               <button
                 key={link.path}
                 onClick={() => { navigate(link.path); setShowMobile(false); }}
-                style={{
-                  background: "none",
-                  border: "none",
-                  textAlign: "left",
-                  fontSize: 16,
-                  fontWeight: 500,
-                  color: "var(--text-primary)",
-                  cursor: "pointer",
-                  padding: "8px 0",
-                  borderBottom: "1px solid var(--border)",
-                }}
+                style={mobileNavBtnStyle}
               >
                 {link.label}
               </button>
             ))}
 
-            {userData?.role === "educator" && (
+            {/* Educator Dashboard */}
+            {isEducator && (
               <button
                 onClick={() => { navigate("/dashboard"); setShowMobile(false); }}
-                style={{
-                  background: "none",
-                  border: "none",
-                  textAlign: "left",
-                  fontSize: 16,
-                  fontWeight: 500,
-                  color: "var(--text-primary)",
-                  cursor: "pointer",
-                  padding: "8px 0",
-                  borderBottom: "1px solid var(--border)",
-                }}
+                style={mobileNavBtnStyle}
               >
                 Dashboard
               </button>
@@ -358,33 +369,24 @@ function Nav() {
               <>
                 <button
                   onClick={() => { navigate("/profile"); setShowMobile(false); }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    textAlign: "left",
-                    fontSize: 16,
-                    fontWeight: 500,
-                    color: "var(--text-primary)",
-                    cursor: "pointer",
-                    padding: "8px 0",
-                    borderBottom: "1px solid var(--border)",
-                  }}
+                  style={mobileNavBtnStyle}
                 >
                   My Profile
                 </button>
+
+                {/* ✅ Student Dashboard — only for students */}
+                {!isEducator && (
+                  <button
+                    onClick={() => { navigate("/student-dashboard"); setShowMobile(false); }}
+                    style={mobileNavBtnStyle}
+                  >
+                    My Dashboard
+                  </button>
+                )}
+
                 <button
                   onClick={() => { navigate("/mycourses"); setShowMobile(false); }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    textAlign: "left",
-                    fontSize: 16,
-                    fontWeight: 500,
-                    color: "var(--text-primary)",
-                    cursor: "pointer",
-                    padding: "8px 0",
-                    borderBottom: "1px solid var(--border)",
-                  }}
+                  style={mobileNavBtnStyle}
                 >
                   My Courses
                 </button>
@@ -394,10 +396,16 @@ function Nav() {
             <div className="mt-auto flex flex-col gap-2">
               {!userData ? (
                 <>
-                  <button className="btn-outline w-full justify-center" onClick={() => { navigate("/login"); setShowMobile(false); }}>
+                  <button
+                    className="btn-outline w-full justify-center"
+                    onClick={() => { navigate("/login"); setShowMobile(false); }}
+                  >
                     Login
                   </button>
-                  <button className="btn-primary w-full justify-center" onClick={() => { navigate("/signup"); setShowMobile(false); }}>
+                  <button
+                    className="btn-primary w-full justify-center"
+                    onClick={() => { navigate("/signup"); setShowMobile(false); }}
+                  >
                     Sign Up
                   </button>
                 </>
