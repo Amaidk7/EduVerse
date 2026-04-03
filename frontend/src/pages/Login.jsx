@@ -73,7 +73,8 @@ function Login() {
           width: "100%",
           maxWidth: 880,
           display: "flex",
-          background: "var(--bg-card)",
+          // FIX 1: bg-secondary so left form panel gets visible contrast against wrapper
+          background: "var(--bg-secondary)",
           borderRadius: 24,
           overflow: "hidden",
           border: "1px solid var(--border)",
@@ -81,15 +82,19 @@ function Login() {
           minHeight: 540,
         }}
       >
-        {/* Left Form */}
+        {/* ── Left Form Panel ── */}
         <div
           style={{
             flex: 1,
+            // FIX 2: explicit bg-card so it stands out from the bg-secondary wrapper
+            background: "var(--bg-card)",
             padding: "48px 40px",
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
             gap: 20,
+            // subtle right border to separate from right panel
+            borderRight: "1px solid var(--border)",
           }}
         >
           {/* Back */}
@@ -119,11 +124,12 @@ function Login() {
                 fontWeight: 800,
                 color: "var(--text-primary)",
                 marginBottom: 4,
+                marginTop: 0,
               }}
             >
               Welcome back
             </h1>
-            <p style={{ color: "var(--text-muted)", fontSize: 15 }}>
+            <p style={{ color: "var(--text-muted)", fontSize: 15, margin: 0 }}>
               Login to continue your learning journey
             </p>
           </div>
@@ -177,7 +183,7 @@ function Login() {
             </div>
           </div>
 
-          {/* Forgot */}
+          {/* Forgot Password */}
           <div style={{ textAlign: "right", marginTop: -10 }}>
             <span
               onClick={() => navigate("/forget")}
@@ -192,14 +198,30 @@ function Login() {
             </span>
           </div>
 
-          {/* Login Button */}
+          {/* FIX 3: Login button — hardcoded dark bg + white text, visible in both modes */}
           <button
-            className="btn-primary"
-            style={{ justifyContent: "center", height: 46, fontSize: 15 }}
             onClick={handleLogin}
             disabled={loading}
+            style={{
+              height: 46,
+              borderRadius: 12,
+              border: "none",
+              cursor: loading ? "not-allowed" : "pointer",
+              fontSize: 15,
+              fontWeight: 700,
+              fontFamily: "Syne, sans-serif",
+              background: loading ? "var(--border)" : "#1a1a2e",
+              color: "#ffffff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "background 0.2s",
+              opacity: loading ? 0.7 : 1,
+            }}
+            onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = "#2d2b55"; }}
+            onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = "#1a1a2e"; }}
           >
-            {loading ? <ClipLoader size={22} color="var(--bg-primary)" /> : "Login"}
+            {loading ? <ClipLoader size={22} color="#ffffff" /> : "Login"}
           </button>
 
           {/* Divider */}
@@ -219,7 +241,7 @@ function Login() {
             Continue with Google
           </button>
 
-          <p style={{ fontSize: 14, color: "var(--text-muted)", textAlign: "center" }}>
+          <p style={{ fontSize: 14, color: "var(--text-muted)", textAlign: "center", margin: 0 }}>
             Don't have an account?{" "}
             <span
               onClick={() => navigate("/signup")}
@@ -230,12 +252,14 @@ function Login() {
           </p>
         </div>
 
-        {/* Right Panel — hidden on mobile */}
+        {/* ── Right Panel — always light cream, hidden on mobile ── */}
         <div
           className="hidden md:flex"
           style={{
             width: 320,
-            background: "var(--text-primary)",
+            // FIX 4: hardcoded light cream bg — always light regardless of theme
+            // matches the screenshot's intent: right = light brand panel
+            background: "#f0ede8",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
@@ -247,14 +271,15 @@ function Login() {
           <img
             src={logo}
             alt=""
-            style={{ width: 72, height: 72, borderRadius: 16, objectFit: "cover" }}
+            style={{ width: 80, height: 80, borderRadius: 20, objectFit: "cover" }}
           />
           <span
             style={{
               fontFamily: "Syne, sans-serif",
-              fontSize: 22,
+              fontSize: 24,
               fontWeight: 800,
-              color: "var(--bg-primary)",
+              // always dark text on light bg
+              color: "#1a1a2e",
               textAlign: "center",
             }}
           >
@@ -263,22 +288,29 @@ function Login() {
           <p
             style={{
               fontSize: 14,
-              color: "rgba(255,255,255,0.5)",
+              color: "#6b6b7a",
               textAlign: "center",
               lineHeight: 1.7,
+              margin: 0,
             }}
           >
             Learn from world-class instructors. Build real skills. Advance your career.
           </p>
 
           {/* Stats */}
-          <div style={{ display: "flex", gap: 24, marginTop: 8 }}>
+          <div style={{ display: "flex", gap: 24, marginTop: 12 }}>
             {[["50+", "Courses"], ["1k+", "Students"], ["4.8★", "Rating"]].map(([val, label]) => (
               <div key={label} style={{ textAlign: "center" }}>
-                <div style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 18, color: "var(--bg-primary)" }}>
+                <div style={{
+                  fontFamily: "Syne, sans-serif",
+                  fontWeight: 800,
+                  fontSize: 20,
+                  // always dark on light panel
+                  color: "#1a1a2e",
+                }}>
                   {val}
                 </div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: "#9999aa", marginTop: 2 }}>
                   {label}
                 </div>
               </div>

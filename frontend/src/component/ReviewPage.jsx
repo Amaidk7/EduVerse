@@ -3,28 +3,58 @@ import { useSelector } from 'react-redux'
 import ReviewCard from './ReviewCard'
 
 function ReviewPage() {
-   const {reviewData} = useSelector(state=>state.review)
-   const [latestReview,setLatestReview] = useState(null)
+  const { reviewData } = useSelector(state => state.review)
+  const [latestReview, setLatestReview] = useState(null)
 
-   useEffect(()=>{
-      setLatestReview(reviewData?.slice(0,6))
-   },[reviewData])
-   
+  useEffect(() => {
+    setLatestReview(reviewData?.slice(0, 6))
+  }, [reviewData])
+
+  if (!latestReview || latestReview.length === 0) return null
 
   return (
-    <div className='flex items-center justify-center flex-col'>
-      <h1 className='md:text-[45px] text-[30px] font-semibold text-center mt-[30px] px-[20px]'>Real Reviews for Real Courses</h1>
-      <span className='lg:w-[50%] md:w-[80%] text-[15px] text-center mt-[30px] mb-[30px] px-[20px]'>
-      Discover how our Virtual Courses is transforming learning experiences through real feedback from students and professionals worldwide.
-      </span>
+    <div style={{ padding: "60px 24px", display: "flex", flexDirection: "column", alignItems: "center" }}>
 
-      <div className='w-[100%] min-[100vh] flex items-center justify-center flex-wrap gap-[50px] lg:p-[50px] md:p-[30px] p-[10px] mb-[40px]'>
+      {/* Heading */}
+      <div style={{ textAlign: "center", marginBottom: 48, maxWidth: 640 }}>
+        <div style={{
+          display: "inline-block", fontSize: 12, fontWeight: 700,
+          letterSpacing: "0.12em", textTransform: "uppercase",
+          color: "var(--accent)", marginBottom: 12,
+        }}>
+          Student Reviews
+        </div>
+        <h2 style={{
+          fontFamily: "Syne, sans-serif", fontSize: 36, fontWeight: 800,
+          color: "var(--text-primary)", margin: "0 0 16px", lineHeight: 1.2,
+        }}>
+          Real Reviews for Real Courses
+        </h2>
+        <p style={{ fontSize: 15, color: "var(--text-muted)", margin: 0, lineHeight: 1.7 }}>
+          Discover how our Virtual Courses is transforming learning experiences through real feedback from students and professionals worldwide.
+        </p>
+      </div>
 
-       {
-        latestReview?.map((review , index)=>(
-            <ReviewCard key={review._id} comment={review.comment} rating={review.rating} photoUrl={review.user.photoUrl} courseTitle={review.course.title} description={review.user.description} name={review.user.name} />
-        ))
-       }
+      {/* Cards Grid */}
+      <div style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 24,
+        justifyContent: "center",
+        maxWidth: 1100,
+        width: "100%",
+      }}>
+        {latestReview.map((review, index) => (
+          <ReviewCard
+            key={index}
+            comment={review.comment}
+            rating={review.rating}
+            photoUrl={review.user?.photoUrl}
+            courseTitle={review.course?.title}
+            description={review.user?.description}
+            name={review.user?.name}
+          />
+        ))}
       </div>
     </div>
   )

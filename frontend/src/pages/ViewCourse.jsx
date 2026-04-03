@@ -18,8 +18,7 @@ function ViewCourse() {
   const { courseId } = useParams()
   const dispatch = useDispatch()
 
-  const { courseData } = useSelector(state => state.course)
-  const { selectedCourse } = useSelector(state => state.course)
+  const { courseData, selectedCourse } = useSelector(state => state.course)
   const { userData } = useSelector(state => state.user)
 
   const [selectedLecture, setSelectedLecture] = useState(null)
@@ -30,23 +29,19 @@ function ViewCourse() {
   const [comment, setComment] = useState("")
   const [loading, setLoading] = useState(false)
 
-  // ✅ Fix 1: use .find() instead of .map() to avoid repeated dispatches
   const fetchCourseData = useCallback(() => {
     const found = courseData?.find(course => course._id === courseId)
     if (found) dispatch(setSelectedCourse(found))
   }, [courseData, courseId, dispatch])
 
-  // ✅ Fix 2: checkEnrollment inside useEffect, no stale closure issues
   useEffect(() => {
     fetchCourseData()
-
     const verify = userData?.enrolledCourses?.some(c =>
       (typeof c === 'string' ? c : c._id).toString() === courseId?.toString()
     )
     setIsEnrolled(!!verify)
   }, [courseData, courseId, userData, fetchCourseData])
 
-  // Fetch creator info when selectedCourse changes
   useEffect(() => {
     const handleCreator = async () => {
       if (!selectedCourse?.creator) return
@@ -64,7 +59,6 @@ function ViewCourse() {
     handleCreator()
   }, [selectedCourse])
 
-  // Filter other courses by same creator
   useEffect(() => {
     if (creatorData?._id && courseData?.length > 0) {
       const filtered = courseData.filter(
@@ -74,7 +68,6 @@ function ViewCourse() {
     }
   }, [creatorData, courseData, courseId])
 
-  // ✅ Fix 3: null check before using userData._id
   const handleEnroll = async () => {
     if (!userData?._id) {
       toast.error("Please login to enroll.")
@@ -86,7 +79,6 @@ function ViewCourse() {
         { userId: userData._id, courseId },
         { withCredentials: true }
       )
-
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: orderData.data.amount,
@@ -108,24 +100,16 @@ function ViewCourse() {
           }
         }
       }
-
       const rzp = new window.Razorpay(options)
       rzp.open()
     } catch (error) {
-      console.log(error)
       toast.error("Something went wrong while enrolling.")
     }
   }
 
   const handleReview = async () => {
-    if (!rating) {
-      toast.error("Please select a rating.")
-      return
-    }
-    if (!comment.trim()) {
-      toast.error("Please write a comment.")
-      return
-    }
+    if (!rating) return toast.error("Please select a rating.")
+    if (!comment.trim()) return toast.error("Please write a comment.")
     setLoading(true)
     try {
       await axios.post(
@@ -137,10 +121,7 @@ function ViewCourse() {
       setRating(0)
       setComment("")
     } catch (error) {
-      console.log(error)
       toast.error(error?.response?.data?.message || "Failed to submit review.")
-      setRating(0)
-      setComment("")
     } finally {
       setLoading(false)
     }
@@ -148,7 +129,7 @@ function ViewCourse() {
 
   const calculateAvgReview = (reviews) => {
     if (!reviews || reviews.length === 0) return 0
-    const total = reviews.reduce((sum, review) => sum + review.rating, 0)
+    const total = reviews.reduce((sum, r) => sum + r.rating, 0)
     return (total / reviews.length).toFixed(1)
   }
 
@@ -156,127 +137,177 @@ function ViewCourse() {
   const reviewCount = selectedCourse?.reviews?.length || 0
 
   return (
-    <div className='min-h-screen bg-gray-50 p-4 md:p-6'>
-      <div className='max-w-6xl mx-auto bg-white shadow-md rounded-xl p-4 md:p-6 space-y-6'>
+    <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
 
-        {/* ── Top Section ── */}
-        <div className='flex flex-col md:flex-row gap-6'>
+      {/* ── Sticky Top Bar ── */}
+      <div style={{
+        position: "sticky", top: 0, zIndex: 40,
+        background: "var(--nav-bg)", backdropFilter: "blur(20px)",
+        borderBottom: "1px solid var(--border)",
+        padding: "14px 24px",
+        display: "flex", alignItems: "center", gap: 12,
+      }}>
+        <button
+          onClick={() => navigate(-1)}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: 6, fontSize: 14 }}
+        >
+          <FaArrowLeftLong /> Back
+        </button>
+        <span style={{ color: "var(--border)", fontSize: 16 }}>|</span>
+        <span style={{ fontFamily: "Syne, sans-serif", fontSize: 15, fontWeight: 700, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {selectedCourse?.title}
+        </span>
+      </div>
+
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px 60px" }}>
+
+        {/* ── Hero: Thumbnail + Info ── */}
+        <div style={{ display: "flex", gap: 32, flexWrap: "wrap", marginBottom: 40 }}>
 
           {/* Thumbnail */}
-          <div className='w-full md:w-1/2'>
-            {/* ✅ Fix 4: mb-3 added so arrow doesn't stick to image */}
-            <FaArrowLeftLong
-              className='text-black w-5 h-5 cursor-pointer mb-3'
-              onClick={() => navigate("/")}
-            />
-            <img
-              src={selectedCourse?.thumbnail || img}
-              alt={selectedCourse?.title || "Course thumbnail"}
-              className='rounded-xl w-full object-cover'
-            />
+          <div style={{ flex: "0 0 auto", width: "100%", maxWidth: 460 }}>
+            <div style={{ borderRadius: 16, overflow: "hidden", border: "1px solid var(--border)", background: "var(--bg-secondary)", aspectRatio: "16/9" }}>
+              <img
+                src={selectedCourse?.thumbnail || img}
+                alt={selectedCourse?.title || "Course thumbnail"}
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              />
+            </div>
           </div>
 
-          {/* Course Info */}
-          {/* ✅ Fix 5: mt only on md screens */}
-          <div className='flex-1 space-y-3 md:mt-5'>
-            <h2 className='text-2xl font-bold'>{selectedCourse?.title}</h2>
-            <p className='text-gray-600'>{selectedCourse?.subTitle}</p>
+          {/* Info */}
+          <div style={{ flex: 1, minWidth: 260, display: "flex", flexDirection: "column", gap: 14 }}>
 
-            {/* Rating */}
-            <div className='flex items-center gap-2 text-yellow-500 font-medium'>
-              <span className='flex items-center gap-1'>
-                <FaStar />
-                {avgRating}
-              </span>
-              {/* ✅ Fix 6: dynamic review count */}
-              <span className='text-gray-400 text-sm'>({reviewCount} Reviews)</span>
-            </div>
-
-            {/* Price */}
-            <div className='flex items-baseline gap-2'>
-              <span className='text-xl font-semibold text-black'>
-                ₹{selectedCourse?.price}
-              </span>
-              {/* ✅ Fix 7: only show original price if it exists in data */}
-              {selectedCourse?.originalPrice && (
-                <span className='line-through text-sm text-gray-400'>
-                  ₹{selectedCourse.originalPrice}
+            {/* Category + Level badges */}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {selectedCourse?.category && (
+                <span style={{ padding: "4px 12px", borderRadius: 100, background: "var(--bg-secondary)", border: "1px solid var(--border)", fontSize: 12, fontWeight: 600, color: "var(--text-secondary)" }}>
+                  {selectedCourse.category}
+                </span>
+              )}
+              {selectedCourse?.level && (
+                <span style={{ padding: "4px 12px", borderRadius: 100, background: "rgba(108,99,255,0.1)", border: "1px solid rgba(108,99,255,0.3)", fontSize: 12, fontWeight: 600, color: "#6c63ff" }}>
+                  {selectedCourse.level}
                 </span>
               )}
             </div>
 
-            {/* Highlights */}
-            <ul className='text-sm text-gray-700 space-y-1'>
-              <li>✅ 10+ hours of video content</li>
-              <li>✅ Lifetime access to course materials</li>
-            </ul>
+            <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 26, fontWeight: 800, color: "var(--text-primary)", margin: 0, lineHeight: 1.3 }}>
+              {selectedCourse?.title}
+            </h1>
 
-            {/* CTA Button */}
+            {selectedCourse?.subTitle && (
+              <p style={{ fontSize: 15, color: "var(--text-secondary)", margin: 0 }}>
+                {selectedCourse.subTitle}
+              </p>
+            )}
+
+            {/* Rating */}
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <FaStar style={{ color: "#f59e0b", fontSize: 16 }} />
+              <span style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 15 }}>{avgRating}</span>
+              <span style={{ color: "var(--text-muted)", fontSize: 13 }}>({reviewCount} Reviews)</span>
+            </div>
+
+            {/* Price */}
+            <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+              <span style={{ fontFamily: "Syne, sans-serif", fontSize: 28, fontWeight: 800, color: "var(--text-primary)" }}>
+                ₹{selectedCourse?.price}
+              </span>
+            </div>
+
+            {/* Highlights */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {["10+ hours of video content", "Lifetime access to course materials"].map(h => (
+                <div key={h} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "var(--text-secondary)" }}>
+                  <span style={{ color: "#22c55e", fontSize: 16 }}>✓</span> {h}
+                </div>
+              ))}
+            </div>
+
+            {/* CTA */}
             {!isEnrolled ? (
               <button
-                className='bg-black text-white px-6 py-2 rounded hover:bg-gray-700 transition-colors cursor-pointer'
                 onClick={handleEnroll}
+                style={{
+                  marginTop: 4, padding: "14px 32px", borderRadius: 12, border: "none",
+                  background: "#1a1a2e", color: "#ffffff",
+                  fontFamily: "Syne, sans-serif", fontSize: 15, fontWeight: 700,
+                  cursor: "pointer", alignSelf: "flex-start", transition: "opacity 0.2s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
+                onMouseLeave={e => e.currentTarget.style.opacity = "1"}
               >
-                Enroll Now
+                Enroll Now — ₹{selectedCourse?.price}
               </button>
             ) : (
               <button
-                className='bg-green-100 text-green-600 px-6 py-2 rounded hover:bg-green-200 transition-colors cursor-pointer'
                 onClick={() => navigate(`/viewlecture/${courseId}`)}
+                style={{
+                  marginTop: 4, padding: "14px 32px", borderRadius: 12, border: "none",
+                  background: "#16a34a", color: "#ffffff",
+                  fontFamily: "Syne, sans-serif", fontSize: 15, fontWeight: 700,
+                  cursor: "pointer", alignSelf: "flex-start",
+                }}
               >
-                Watch Now
+                ▶ Watch Now
               </button>
             )}
           </div>
         </div>
 
-        {/* ── What You'll Learn ── */}
-        <div>
-          <h2 className='text-xl font-semibold mb-2'>What You'll Learn</h2>
-          <ul className='list-disc pl-6 text-gray-700 space-y-1'>
-            <li>Learn {selectedCourse?.category} from the beginning</li>
-          </ul>
-        </div>
-
-        {/* ── Who This Course Is For ── */}
-        <div>
-          <h2 className='text-xl font-semibold mb-2'>Who This Course Is For</h2>
-          <p className='text-gray-700'>
-            Beginners, aspiring developers, and professionals looking to upgrade their skills.
-          </p>
+        {/* ── What You'll Learn + Who It's For ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20, marginBottom: 40 }}>
+          {[
+            {
+              title: "What You'll Learn",
+              body: `Learn ${selectedCourse?.category || "this subject"} from the ground up with practical projects and real-world examples.`
+            },
+            {
+              title: "Who This Course Is For",
+              body: "Beginners, aspiring developers, and professionals looking to upgrade their skills."
+            }
+          ].map(({ title, body }) => (
+            <div key={title} style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: "20px 24px" }}>
+              <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginTop: 0, marginBottom: 10 }}>{title}</h2>
+              <p style={{ fontSize: 14, color: "var(--text-secondary)", margin: 0, lineHeight: 1.7 }}>{body}</p>
+            </div>
+          ))}
         </div>
 
         {/* ── Curriculum + Video Preview ── */}
-        <div className='flex flex-col md:flex-row gap-6'>
+        <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 40 }}>
 
-          {/* Curriculum List */}
-          <div className='bg-white w-full md:w-2/5 p-6 rounded-2xl shadow-lg border border-gray-200'>
-            <h2 className='text-xl font-bold mb-1 text-gray-800'>Course Curriculum</h2>
-            <p className='text-sm text-gray-500 mb-4'>
+          {/* Curriculum */}
+          <div style={{ flex: "0 0 auto", width: "100%", maxWidth: 340, background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: "24px 20px" }}>
+            <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginTop: 0, marginBottom: 4 }}>
+              Course Curriculum
+            </h2>
+            <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 16, marginTop: 0 }}>
               {selectedCourse?.lectures?.length || 0} Lectures
             </p>
 
-            {/* ✅ Fix 8: max-h + scroll so long lists don't push video too far down */}
-            <div className='flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-1'>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 360, overflowY: "auto" }}>
               {selectedCourse?.lectures?.map((lecture) => (
                 <button
                   key={lecture._id}
                   disabled={!lecture.isPreviewFree}
-                  onClick={() => {
-                    if (lecture.isPreviewFree) setSelectedLecture(lecture)
+                  onClick={() => { if (lecture.isPreviewFree) setSelectedLecture(lecture) }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "10px 14px", borderRadius: 10,
+                    border: `1px solid ${selectedLecture?._id === lecture._id ? "rgba(108,99,255,0.5)" : "var(--border)"}`,
+                    background: selectedLecture?._id === lecture._id ? "rgba(108,99,255,0.08)" : "var(--bg-secondary)",
+                    cursor: lecture.isPreviewFree ? "pointer" : "not-allowed",
+                    opacity: lecture.isPreviewFree ? 1 : 0.55,
+                    textAlign: "left",
+                    transition: "all 0.15s",
                   }}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg border transition-all duration-200 text-left
-                    ${lecture.isPreviewFree
-                      ? "hover:bg-gray-100 cursor-pointer border-gray-300"
-                      : "cursor-not-allowed opacity-60 border-gray-200"
-                    }
-                    ${selectedLecture?._id === lecture._id ? "bg-gray-100 border-gray-400" : ""}
-                  `}
                 >
-                  <span className='text-lg text-gray-700'>
+                  <span style={{ color: lecture.isPreviewFree ? "#6c63ff" : "var(--text-muted)", fontSize: 15, flexShrink: 0 }}>
                     {lecture.isPreviewFree ? <FaPlayCircle /> : <FaLock />}
                   </span>
-                  <span className='text-sm font-medium text-gray-800'>
+                  <span style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 500, lineHeight: 1.4 }}>
                     {lecture?.lectureTitle}
                   </span>
                 </button>
@@ -285,41 +316,47 @@ function ViewCourse() {
           </div>
 
           {/* Video Player */}
-          <div className='bg-white w-full md:w-3/5 p-6 rounded-2xl shadow-lg border border-gray-200'>
-            <div className='aspect-video w-full rounded-lg overflow-hidden bg-black flex items-center justify-center'>
+          <div style={{ flex: 1, minWidth: 280, background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: "24px 20px" }}>
+            <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginTop: 0, marginBottom: 16 }}>
+              Free Preview
+            </h2>
+            <div style={{ background: "#000", borderRadius: 12, overflow: "hidden", aspectRatio: "16/9", display: "flex", alignItems: "center", justifyContent: "center" }}>
               {selectedLecture?.videoUrl ? (
                 <video
-                  className='w-full h-full object-cover'
+                  key={selectedLecture._id}
+                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
                   src={selectedLecture.videoUrl}
                   controls
                 />
               ) : (
-                <span className='text-white text-sm text-center px-4'>
+                <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 14, textAlign: "center", padding: "0 24px" }}>
                   Select a free preview lecture to watch
                 </span>
               )}
             </div>
             {selectedLecture && (
-              <p className='text-sm text-gray-600 mt-3 font-medium'>
-                {selectedLecture.lectureTitle}
+              <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 10, marginBottom: 0 }}>
+                Now playing: <strong style={{ color: "var(--text-primary)" }}>{selectedLecture.lectureTitle}</strong>
               </p>
             )}
           </div>
         </div>
 
         {/* ── Write a Review ── */}
-        <div className='border-t pt-6'>
-          {/* ✅ Fix 9: "Write a Reviews" → "Write a Review" */}
-          <h2 className='text-xl font-semibold mb-4'>Write a Review</h2>
+        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: "24px", marginBottom: 40 }}>
+          <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginTop: 0, marginBottom: 16 }}>
+            Write a Review
+          </h2>
 
-          <div className='flex gap-1 mb-3'>
+          <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
             {[1, 2, 3, 4, 5].map((star) => (
               <FaStar
                 key={star}
                 onClick={() => setRating(star)}
-                className={`cursor-pointer text-xl transition-colors ${
-                  star <= rating ? "fill-amber-400 text-amber-400" : "fill-gray-300 text-gray-300"
-                }`}
+                style={{
+                  cursor: "pointer", fontSize: 22, transition: "color 0.15s",
+                  color: star <= rating ? "#f59e0b" : "var(--border)",
+                }}
               />
             ))}
           </div>
@@ -327,42 +364,63 @@ function ViewCourse() {
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            className='w-full border border-gray-300 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-gray-300'
-            placeholder='Write your review here...'
+            placeholder="Share your experience with this course..."
             rows={3}
+            style={{
+              width: "100%", boxSizing: "border-box",
+              border: "1px solid var(--border)", borderRadius: 10,
+              padding: "12px 14px", fontSize: 14,
+              background: "var(--bg-secondary)", color: "var(--text-primary)",
+              resize: "none", outline: "none", fontFamily: "inherit",
+              lineHeight: 1.6,
+            }}
           />
 
           <button
-            className='bg-black text-white mt-3 px-5 py-2 rounded hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center min-w-[140px]'
-            disabled={loading}
             onClick={handleReview}
+            disabled={loading}
+            style={{
+              marginTop: 12, padding: "11px 28px", borderRadius: 10,
+              border: "none", background: loading ? "var(--border)" : "#1a1a2e",
+              color: "#ffffff", fontWeight: 700, fontSize: 14,
+              cursor: loading ? "not-allowed" : "pointer",
+              display: "flex", alignItems: "center", gap: 8,
+            }}
           >
-            {loading ? <ClipLoader size={20} color='white' /> : "Submit Review"}
+            {loading ? <ClipLoader size={18} color="white" /> : "Submit Review"}
           </button>
         </div>
 
         {/* ── Creator Info ── */}
-        <div className='flex items-center gap-4 pt-4 border-t'>
-          <img
-            src={creatorData?.photoUrl || img}
-            alt={creatorData?.name || "Creator"}
-            className='w-16 h-16 rounded-full object-cover border border-gray-200 flex-shrink-0'
-          />
-          <div className='min-w-0'>
-            <h2 className='text-lg font-semibold'>{creatorData?.name}</h2>
-            <p className='text-sm text-gray-600 mt-0.5'>{creatorData?.description}</p>
-            {/* ✅ Fix 10: break-all prevents long email from overflowing */}
-            <p className='text-sm text-gray-500 break-all'>{creatorData?.email}</p>
+        {creatorData && (
+          <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: "24px", marginBottom: 40, display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+            {creatorData?.photoUrl ? (
+              <img
+                src={creatorData.photoUrl}
+                alt={creatorData.name}
+                style={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover", border: "2px solid var(--border)", flexShrink: 0 }}
+              />
+            ) : (
+              <div style={{ width: 72, height: 72, borderRadius: "50%", background: "#6c63ff", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, fontWeight: 700, flexShrink: 0 }}>
+                {creatorData?.name?.slice(0, 1).toUpperCase()}
+              </div>
+            )}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)", marginBottom: 4 }}>Educator</div>
+              <h3 style={{ fontFamily: "Syne, sans-serif", fontSize: 18, fontWeight: 700, color: "var(--text-primary)", margin: "0 0 4px" }}>{creatorData?.name}</h3>
+              {creatorData?.description && <p style={{ fontSize: 14, color: "var(--text-secondary)", margin: "0 0 4px" }}>{creatorData.description}</p>}
+              <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0, wordBreak: "break-all" }}>{creatorData?.email}</p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ── Other Courses by Creator ── */}
         {creatorCourses?.length > 0 && (
           <div>
-            <p className='text-xl font-semibold mb-4'>
-              Other Published Courses by the Educator
-            </p>
-            <div className='flex flex-wrap gap-6 justify-center lg:justify-start lg:px-0'>
+            <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 18, fontWeight: 700, color: "var(--text-primary)", marginBottom: 20, marginTop: 0 }}>
+              More by this Educator
+            </h2>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 20 }}>
               {creatorCourses.map((course) => (
                 <Card
                   key={course._id}
@@ -371,6 +429,7 @@ function ViewCourse() {
                   price={course.price}
                   title={course.title}
                   category={course.category}
+                  reviews={course.reviews}
                 />
               ))}
             </div>

@@ -2,63 +2,415 @@ import React from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeftLong } from "react-icons/fa6";
-import { FaEnvelope, FaUserGraduate, FaBookOpen } from "react-icons/fa6";
+import { FaEnvelope, FaUserGraduate, FaBookOpen, FaPen } from "react-icons/fa6";
 
 function Profile() {
   const { userData } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const avatarChar = userData?.name?.slice(0, 1).toUpperCase();
+  const enrolledCount = userData?.enrolledCourses?.length ?? 0;
+  const isEducator = userData?.role === "educator";
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-primary)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <div className="animate-scale-in" style={{ width: "100%", maxWidth: 480, background: "var(--bg-card)", borderRadius: 24, border: "1px solid var(--border)", boxShadow: "var(--shadow-hover)", overflow: "hidden" }}>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
 
-        {/* Header Banner */}
-        <div style={{ height: 100, background: "var(--text-primary)", position: "relative" }}>
-          <button onClick={() => navigate("/")} style={{ position: "absolute", top: 16, left: 16, background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, padding: "6px 10px", cursor: "pointer", color: "white", display: "flex", alignItems: "center", gap: 6, fontSize: 13 }}>
-            <FaArrowLeftLong /> Back
-          </button>
-        </div>
+        .profile-root {
+          min-height: 100vh;
+          background: #0f0f0f;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px 16px;
+          font-family: 'DM Sans', sans-serif;
+        }
 
-        {/* Avatar */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: -48, paddingBottom: 32, padding: "0 32px 32px" }}>
-          <div style={{ marginTop: -48, marginBottom: 16 }}>
-            {userData?.photoUrl ? (
-              <img src={userData.photoUrl} style={{ width: 96, height: 96, borderRadius: "50%", objectFit: "cover", border: "4px solid var(--bg-card)", boxShadow: "var(--shadow-hover)" }} alt="" />
-            ) : (
-              <div style={{ width: 96, height: 96, borderRadius: "50%", background: "var(--accent)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, fontWeight: 700, border: "4px solid var(--bg-card)", boxShadow: "var(--shadow-hover)", fontFamily: "Syne, sans-serif" }}>
-                {avatarChar}
-              </div>
-            )}
+        .profile-card {
+          width: 100%;
+          max-width: 460px;
+          border-radius: 24px;
+          overflow: hidden;
+          background: #1a1a1a;
+          border: 1px solid #2a2a2a;
+          box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+          animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+          from { opacity:0; transform: translateY(20px); }
+          to   { opacity:1; transform: translateY(0); }
+        }
+
+        /* ── HEADER ── */
+        .profile-header {
+          position: relative;
+          height: 130px;
+          background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+          overflow: hidden;
+        }
+
+        .profile-header::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(ellipse at 70% 50%, rgba(99,102,241,0.35) 0%, transparent 70%);
+        }
+
+        /* decorative circles */
+        .profile-header::after {
+          content: '';
+          position: absolute;
+          width: 200px;
+          height: 200px;
+          border-radius: 50%;
+          border: 1px solid rgba(255,255,255,0.08);
+          top: -60px;
+          right: -40px;
+        }
+
+        .deco-circle {
+          position: absolute;
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          border: 1px solid rgba(255,255,255,0.06);
+          bottom: -50px;
+          right: 40px;
+        }
+
+        .back-btn {
+          position: absolute;
+          top: 16px;
+          left: 16px;
+          z-index: 2;
+          background: rgba(255,255,255,0.12);
+          backdrop-filter: blur(8px);
+          border: 1px solid rgba(255,255,255,0.15);
+          border-radius: 8px;
+          padding: 6px 12px;
+          cursor: pointer;
+          color: white;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 13px;
+          font-family: 'DM Sans', sans-serif;
+          transition: background 0.2s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.2); }
+
+        /* role badge in header */
+        .role-pill {
+          position: absolute;
+          top: 16px;
+          right: 16px;
+          z-index: 2;
+          background: rgba(255,255,255,0.12);
+          border: 1px solid rgba(255,255,255,0.2);
+          color: white;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          padding: 4px 10px;
+          border-radius: 20px;
+        }
+
+        /* ── AVATAR OVERLAP ZONE ── */
+        .avatar-zone {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          margin-top: -52px;
+          position: relative;
+          z-index: 3;
+          padding: 0 28px;
+        }
+
+        .avatar-ring {
+          width: 104px;
+          height: 104px;
+          border-radius: 50%;
+          padding: 3px;
+          background: linear-gradient(135deg, #6366f1, #818cf8);
+          box-shadow: 0 8px 32px rgba(99,102,241,0.4);
+          margin-bottom: 14px;
+        }
+
+        .avatar-inner {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          overflow: hidden;
+          background: #1a1a1a;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .avatar-letter {
+          font-family: 'Syne', sans-serif;
+          font-size: 36px;
+          font-weight: 800;
+          color: white;
+        }
+
+        .avatar-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        /* edit avatar button */
+        .avatar-edit {
+          position: absolute;
+          top: 0;
+          right: calc(50% - 64px);
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: #6366f1;
+          border: 2px solid #1a1a1a;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+        }
+
+        .profile-name {
+          font-family: 'Syne', sans-serif;
+          font-size: 24px;
+          font-weight: 800;
+          color: #f5f5f5;
+          margin-bottom: 4px;
+          text-align: center;
+        }
+
+        .profile-email-sub {
+          font-size: 13px;
+          color: #6b7280;
+          margin-bottom: 24px;
+          text-align: center;
+        }
+
+        /* ── STATS ROW ── */
+        .stats-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          gap: 1px;
+          background: #2a2a2a;
+          border-radius: 14px;
+          overflow: hidden;
+          margin-bottom: 20px;
+          width: 100%;
+        }
+
+        .stat-cell {
+          background: #222;
+          padding: 14px 8px;
+          text-align: center;
+        }
+
+        .stat-val {
+          font-family: 'Syne', sans-serif;
+          font-size: 22px;
+          font-weight: 700;
+          color: #f5f5f5;
+          line-height: 1;
+        }
+
+        .stat-label {
+          font-size: 11px;
+          color: #6b7280;
+          margin-top: 4px;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+        }
+
+        /* ── INFO ROWS ── */
+        .info-list {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          width: 100%;
+          margin-bottom: 24px;
+        }
+
+        .info-row {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          background: #222;
+          border: 1px solid #2a2a2a;
+          border-radius: 14px;
+          padding: 14px 16px;
+          transition: border-color 0.2s;
+        }
+        .info-row:hover { border-color: #3f3f3f; }
+
+        .info-icon {
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          background: rgba(99,102,241,0.12);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          color: #818cf8;
+        }
+
+        .info-label {
+          font-size: 10px;
+          font-weight: 600;
+          color: #4b5563;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          margin-bottom: 3px;
+        }
+
+        .info-value {
+          font-size: 14px;
+          color: #e5e7eb;
+          word-break: break-word;
+        }
+
+        /* ── BUTTONS ── */
+        .btn-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+          width: 100%;
+        }
+
+        .btn {
+          padding: 12px;
+          border-radius: 12px;
+          font-size: 14px;
+          font-weight: 600;
+          font-family: 'DM Sans', sans-serif;
+          cursor: pointer;
+          border: none;
+          transition: all 0.2s;
+          text-align: center;
+        }
+
+        .btn-ghost {
+          background: #222;
+          color: #e5e7eb;
+          border: 1px solid #2a2a2a;
+        }
+        .btn-ghost:hover { background: #2a2a2a; border-color: #3f3f3f; }
+
+        .btn-indigo {
+          background: #6366f1;
+          color: white;
+          box-shadow: 0 4px 16px rgba(99,102,241,0.3);
+        }
+        .btn-indigo:hover { background: #4f46e5; transform: translateY(-1px); }
+      `}</style>
+
+      <div className="profile-root">
+        <div className="profile-card">
+
+          {/* ── HEADER ── */}
+          <div className="profile-header">
+            <div className="deco-circle" />
+            <button className="back-btn" onClick={() => navigate("/")}>
+              <FaArrowLeftLong size={12} /> Back
+            </button>
+            <span className="role-pill">
+              {isEducator ? "Educator" : "Student"}
+            </span>
           </div>
 
-          <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 22, fontWeight: 800, color: "var(--text-primary)", marginBottom: 4 }}>{userData?.name}</h2>
-          <span className="badge" style={{ textTransform: "capitalize" }}>{userData?.role}</span>
-
-          {/* Info Cards */}
-          <div style={{ width: "100%", marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
-            {[
-              { icon: <FaEnvelope size={15} />, label: "Email", value: userData?.email },
-              { icon: <FaUserGraduate size={15} />, label: "Bio", value: userData?.description || "No bio added yet" },
-              { icon: <FaBookOpen size={15} />, label: "Enrolled Courses", value: userData?.enrolledCourses?.length + " courses" },
-            ].map(({ icon, label, value }) => (
-              <div key={label} style={{ background: "var(--bg-secondary)", borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "flex-start", gap: 12, border: "1px solid var(--border)" }}>
-                <span style={{ color: "var(--accent)", marginTop: 1 }}>{icon}</span>
-                <div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>{label}</div>
-                  <div style={{ fontSize: 14, color: "var(--text-primary)" }}>{value}</div>
+          {/* ── AVATAR + NAME ── */}
+          <div className="avatar-zone">
+            <div style={{ position: "relative" }}>
+              <div className="avatar-ring">
+                <div className="avatar-inner">
+                  {userData?.photoUrl
+                    ? <img src={userData.photoUrl} className="avatar-img" alt="" />
+                    : <span className="avatar-letter">{avatarChar}</span>
+                  }
                 </div>
               </div>
-            ))}
-          </div>
+              <div className="avatar-edit" onClick={() => navigate("/editprofile")} title="Edit photo">
+                <FaPen size={10} color="white" />
+              </div>
+            </div>
 
-          <div style={{ display: "flex", gap: 12, marginTop: 24, width: "100%" }}>
-            <button className="btn-outline" style={{ flex: 1, justifyContent: "center" }} onClick={() => navigate("/mycourses")}>My Courses</button>
-            <button className="btn-primary" style={{ flex: 1, justifyContent: "center" }} onClick={() => navigate("/editprofile")}>Edit Profile</button>
+            <h2 className="profile-name">{userData?.name || "Your Name"}</h2>
+            <p className="profile-email-sub">{userData?.email}</p>
+
+            {/* ── STATS ── */}
+            <div className="stats-row">
+              <div className="stat-cell">
+                <div className="stat-val">{enrolledCount}</div>
+                <div className="stat-label">Courses</div>
+              </div>
+              <div className="stat-cell">
+                <div className="stat-val">{isEducator ? "∞" : "0"}</div>
+                <div className="stat-label">{isEducator ? "Created" : "Completed"}</div>
+              </div>
+              <div className="stat-cell">
+                <div className="stat-val">
+                  {userData?.createdAt
+                    ? new Date(userData.createdAt).getFullYear()
+                    : "—"}
+                </div>
+                <div className="stat-label">Joined</div>
+              </div>
+            </div>
+
+            {/* ── INFO ROWS ── */}
+            <div className="info-list">
+              <div className="info-row">
+                <div className="info-icon"><FaEnvelope size={14} /></div>
+                <div>
+                  <div className="info-label">Email</div>
+                  <div className="info-value">{userData?.email || "—"}</div>
+                </div>
+              </div>
+
+              <div className="info-row">
+                <div className="info-icon"><FaUserGraduate size={14} /></div>
+                <div>
+                  <div className="info-label">Bio</div>
+                  <div className="info-value" style={{ color: userData?.description ? "#e5e7eb" : "#4b5563", fontStyle: userData?.description ? "normal" : "italic" }}>
+                    {userData?.description || "No bio added yet"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="info-row">
+                <div className="info-icon"><FaBookOpen size={14} /></div>
+                <div>
+                  <div className="info-label">Enrolled Courses</div>
+                  <div className="info-value">
+                    {enrolledCount === 0
+                      ? "No courses yet"
+                      : `${enrolledCount} ${enrolledCount === 1 ? "course" : "courses"} enrolled`}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── BUTTONS ── */}
+            <div className="btn-row">
+              <button className="btn btn-ghost" onClick={() => navigate("/mycourses")}>
+                My Courses
+              </button>
+              <button className="btn btn-indigo" onClick={() => navigate("/editprofile")}>
+                Edit Profile
+              </button>
+            </div>
+
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

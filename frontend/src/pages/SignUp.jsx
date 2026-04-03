@@ -74,7 +74,8 @@ function SignUp() {
           width: "100%",
           maxWidth: 880,
           display: "flex",
-          background: "var(--bg-card)",
+          // FIX 1: bg-secondary instead of bg-card so right panel has visible contrast
+          background: "var(--bg-secondary)",
           borderRadius: 24,
           overflow: "hidden",
           border: "1px solid var(--border)",
@@ -82,12 +83,14 @@ function SignUp() {
           minHeight: 580,
         }}
       >
-        {/* Right Panel — hidden on mobile */}
+        {/* ── Left Panel ── */}
         <div
           className="hidden md:flex"
           style={{
             width: 300,
-            background: "var(--text-primary)",
+            // FIX 2: hardcoded deep dark bg so it always looks like a dark accent panel
+            // regardless of light/dark mode — matches the screenshot's intent
+            background: "#1a1a2e",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
@@ -106,7 +109,7 @@ function SignUp() {
               fontFamily: "Syne, sans-serif",
               fontSize: 22,
               fontWeight: 800,
-              color: "var(--bg-primary)",
+              color: "#ffffff",
               textAlign: "center",
             }}
           >
@@ -118,12 +121,13 @@ function SignUp() {
               color: "rgba(255,255,255,0.5)",
               textAlign: "center",
               lineHeight: 1.7,
+              margin: 0,
             }}
           >
             Start your learning journey today. Access 50+ expert-led courses.
           </p>
 
-          {/* Role Visual */}
+          {/* Role Selector */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", marginTop: 12 }}>
             {[
               { r: "student", emoji: "🎓", label: "I want to learn" },
@@ -136,7 +140,7 @@ function SignUp() {
                   padding: "12px 16px",
                   borderRadius: 12,
                   border: `1px solid ${role === r ? "rgba(108,99,255,0.8)" : "rgba(255,255,255,0.1)"}`,
-                  background: role === r ? "rgba(108,99,255,0.2)" : "transparent",
+                  background: role === r ? "rgba(108,99,255,0.25)" : "rgba(255,255,255,0.04)",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
@@ -147,7 +151,7 @@ function SignUp() {
                 <span style={{ fontSize: 20 }}>{emoji}</span>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.9)", textTransform: "capitalize" }}>
-                    {r}
+                    {r === "student" ? "Student" : "Educator"}
                   </div>
                   <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>{label}</div>
                 </div>
@@ -156,15 +160,19 @@ function SignUp() {
           </div>
         </div>
 
-        {/* Right Form */}
+        {/* ── Right Form Panel ── */}
         <div
           style={{
             flex: 1,
+            // FIX 3: explicit white/dark card bg so it separates from outer wrapper
+            background: "var(--bg-card)",
             padding: "48px 40px",
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
             gap: 16,
+            // subtle left border to visually separate panels
+            borderLeft: "1px solid var(--border)",
           }}
         >
           <div style={{ marginBottom: 4 }}>
@@ -175,25 +183,38 @@ function SignUp() {
                 fontWeight: 800,
                 color: "var(--text-primary)",
                 marginBottom: 4,
+                marginTop: 0,
               }}
             >
               Create account
             </h1>
-            <p style={{ color: "var(--text-muted)", fontSize: 15 }}>
+            <p style={{ color: "var(--text-muted)", fontSize: 15, margin: 0 }}>
               Join thousands of learners worldwide
             </p>
           </div>
 
-          {/* Name */}
+          {/* Full Name */}
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)" }}>Full Name</label>
-            <input className="ev-input" type="text" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} />
+            <input
+              className="ev-input"
+              type="text"
+              placeholder="John Doe"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
           </div>
 
           {/* Email */}
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)" }}>Email</label>
-            <input className="ev-input" type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input
+              className="ev-input"
+              type="email"
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
 
           {/* Password */}
@@ -206,11 +227,17 @@ function SignUp() {
                 placeholder="Min 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSignup()}
                 style={{ paddingRight: 42 }}
               />
               <button
                 onClick={() => setShow((p) => !p)}
-                style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", display: "flex" }}
+                style={{
+                  position: "absolute", right: 14, top: "50%",
+                  transform: "translateY(-50%)", background: "none",
+                  border: "none", cursor: "pointer",
+                  color: "var(--text-muted)", display: "flex",
+                }}
               >
                 {show ? <IoEye size={18} /> : <IoEyeOutline size={18} />}
               </button>
@@ -242,14 +269,31 @@ function SignUp() {
             ))}
           </div>
 
-          {/* Signup Button */}
+          {/* FIX 4: Create Account button — solid contrast colors that work in both modes */}
           <button
-            className="btn-primary"
-            style={{ justifyContent: "center", height: 46, fontSize: 15 }}
             onClick={handleSignup}
             disabled={loading}
+            style={{
+              height: 46,
+              borderRadius: 12,
+              border: "none",
+              cursor: loading ? "not-allowed" : "pointer",
+              fontSize: 15,
+              fontWeight: 700,
+              fontFamily: "Syne, sans-serif",
+              // Always dark bg + white text — visible in both light and dark mode
+              background: loading ? "var(--border)" : "#1a1a2e",
+              color: "#ffffff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "opacity 0.2s",
+              opacity: loading ? 0.7 : 1,
+            }}
+            onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = "#2d2b55"; }}
+            onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = "#1a1a2e"; }}
           >
-            {loading ? <ClipLoader size={22} color="var(--bg-primary)" /> : "Create Account"}
+            {loading ? <ClipLoader size={22} color="#ffffff" /> : "Create Account"}
           </button>
 
           {/* Divider */}
@@ -259,7 +303,7 @@ function SignUp() {
             <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
           </div>
 
-          {/* Google */}
+          {/* Google Button */}
           <button
             className="btn-outline"
             style={{ justifyContent: "center", height: 46 }}
@@ -269,7 +313,7 @@ function SignUp() {
             Continue with Google
           </button>
 
-          <p style={{ fontSize: 14, color: "var(--text-muted)", textAlign: "center" }}>
+          <p style={{ fontSize: 14, color: "var(--text-muted)", textAlign: "center", margin: 0 }}>
             Already have an account?{" "}
             <span
               onClick={() => navigate("/login")}

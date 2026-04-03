@@ -28,8 +28,38 @@ const userSchema = new mongoose.Schema({
     enrolledCourses:[{
       type:mongoose.Schema.Types.ObjectId,
       ref: "Course"
-
     }],
+
+    // ── PROGRESS TRACKING (new) ──────────────────────────────────────
+    courseProgress:[{
+        course:{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"Course",
+            required:true
+        },
+        completedLectures:[{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"Lecture"
+        }],
+        // auto-updated by backend
+        progressPercent:{
+            type:Number,
+            default:0,
+            min:0,
+            max:100
+        },
+        lastWatched:{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"Lecture",
+            default:null
+        },
+        completedAt:{
+            type:Date,
+            default:null
+        }
+    }],
+    // ────────────────────────────────────────────────────────────────
+
     resetOtp:{
       type:String
     },
@@ -46,5 +76,3 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model("User" , userSchema)
 
 export default User
-
-
