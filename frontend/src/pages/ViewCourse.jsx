@@ -12,6 +12,7 @@ import Card from '../component/Card'
 import { toast } from 'react-toastify'
 import { ClipLoader } from 'react-spinners'
 import img from "../assets/empty.jpg"
+import { WishlistButton } from '../component/ProgressComponents'
 
 function ViewCourse() {
   const navigate = useNavigate()
@@ -209,11 +210,12 @@ function ViewCourse() {
               <span style={{ color: "var(--text-muted)", fontSize: 13 }}>({reviewCount} Reviews)</span>
             </div>
 
-            {/* Price */}
-            <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+            {/* ✅ Price + WishlistButton side by side */}
+            <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
               <span style={{ fontFamily: "Syne, sans-serif", fontSize: 28, fontWeight: 800, color: "var(--text-primary)" }}>
                 ₹{selectedCourse?.price}
               </span>
+              <WishlistButton courseId={courseId} />
             </div>
 
             {/* Highlights */}
@@ -226,33 +228,35 @@ function ViewCourse() {
             </div>
 
             {/* CTA */}
-            {!isEnrolled ? (
-              <button
-                onClick={handleEnroll}
-                style={{
-                  marginTop: 4, padding: "14px 32px", borderRadius: 12, border: "none",
-                  background: "#1a1a2e", color: "#ffffff",
-                  fontFamily: "Syne, sans-serif", fontSize: 15, fontWeight: 700,
-                  cursor: "pointer", alignSelf: "flex-start", transition: "opacity 0.2s",
-                }}
-                onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
-                onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-              >
-                Enroll Now — ₹{selectedCourse?.price}
-              </button>
-            ) : (
-              <button
-                onClick={() => navigate(`/viewlecture/${courseId}`)}
-                style={{
-                  marginTop: 4, padding: "14px 32px", borderRadius: 12, border: "none",
-                  background: "#16a34a", color: "#ffffff",
-                  fontFamily: "Syne, sans-serif", fontSize: 15, fontWeight: 700,
-                  cursor: "pointer", alignSelf: "flex-start",
-                }}
-              >
-                ▶ Watch Now
-              </button>
-            )}
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 4 }}>
+              {!isEnrolled ? (
+                <button
+                  onClick={handleEnroll}
+                  style={{
+                    padding: "14px 32px", borderRadius: 12, border: "none",
+                    background: "#1a1a2e", color: "#ffffff",
+                    fontFamily: "Syne, sans-serif", fontSize: 15, fontWeight: 700,
+                    cursor: "pointer", transition: "opacity 0.2s",
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
+                  onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+                >
+                  Enroll Now — ₹{selectedCourse?.price}
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate(`/viewlecture/${courseId}`)}
+                  style={{
+                    padding: "14px 32px", borderRadius: 12, border: "none",
+                    background: "#16a34a", color: "#ffffff",
+                    fontFamily: "Syne, sans-serif", fontSize: 15, fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  ▶ Watch Now
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

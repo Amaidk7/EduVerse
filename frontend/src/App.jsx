@@ -31,6 +31,12 @@ import CursorGradient from "./component/CursorGradient";
 // ✅ Student Dashboard import
 import StudentDashboard from "./pages/StudentDashboard";
 
+// ✅ NEW IMPORTS ADDED
+import RoadmapPage from "./pages/RoadmapPage";
+import QuizPage from "./pages/QuizPage";
+import NotesPage from "./pages/NotesPage";
+import WishlistPage from "./pages/WishlistPage";
+
 function AppRoutes() {
   getCurrentUser();
   getCreatorCourse();
@@ -159,6 +165,24 @@ function AppRoutes() {
         <Route
           path="/search"
           element={userData ? <SearchWithAi /> : <Navigate to={"/signup"} />}
+        />
+
+        {/* ✅ NEW ROUTES ADDED */}
+        <Route
+          path="/roadmap"
+          element={userData ? <RoadmapPage /> : <Navigate to={"/signup"} />}
+        />
+        <Route
+          path="/quiz/:courseId"
+          element={userData ? <QuizPage /> : <Navigate to={"/signup"} />}
+        />
+        <Route
+          path="/notes/:courseId"
+          element={userData ? <NotesPage /> : <Navigate to={"/signup"} />}
+        />
+        <Route
+          path="/wishlist"
+          element={userData ? <WishlistPage /> : <Navigate to={"/signup"} />}
         />
       </Routes>
     </>

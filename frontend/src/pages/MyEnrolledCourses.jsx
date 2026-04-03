@@ -10,7 +10,10 @@ import {
   FaBookOpen,
   FaGraduationCap,
   FaCheckCircle,
+  FaBrain,
+  FaStickyNote,
 } from "react-icons/fa";
+import SmartRecommendations from "../component/SmartRecommendations";
 
 function MyEnrolledCourses() {
   const { userData } = useSelector((state) => state.user);
@@ -18,7 +21,6 @@ function MyEnrolledCourses() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // ── SIRF YEH BLOCK NAYA HAI — baaki sab same ──────────────────────
   // Page khulte hi fresh user data fetch karo taaki progress latest rahe
   useEffect(() => {
     const refreshUser = async () => {
@@ -34,7 +36,6 @@ function MyEnrolledCourses() {
     };
     refreshUser();
   }, [dispatch]);
-  // ──────────────────────────────────────────────────────────────────
 
   // Match enrolled IDs → full course objects from courseData (already in Redux)
   const enrolledCourses = useMemo(() => {
@@ -48,7 +49,7 @@ function MyEnrolledCourses() {
       .filter(Boolean);
   }, [userData?.enrolledCourses, courseData]);
 
-  // Get real progress % from userData.courseProgress (populated by backend)
+  // Get real progress % from userData.courseProgress
   const getProgress = (courseId) => {
     if (!userData?.courseProgress?.length)
       return { percent: 0, completed: 0, done: false };
@@ -111,12 +112,25 @@ function MyEnrolledCourses() {
         .ec-btn.resume:hover{background:#1e3a8a;}
         .ec-btn.rewatch{background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.25);}
         .ec-btn.rewatch:hover{background:rgba(34,197,94,0.18);}
+
+        /* ── NEW: Quiz + Notes action buttons ── */
+        .ec-action-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+        .ec-action-btn{padding:9px 8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;}
+        .ec-action-btn.quiz{background:rgba(251,146,60,0.12);color:#fb923c;border:1px solid rgba(251,146,60,0.25);}
+        .ec-action-btn.quiz:hover{background:rgba(251,146,60,0.22);transform:translateY(-1px);}
+        .ec-action-btn.notes{background:rgba(139,92,246,0.12);color:#a78bfa;border:1px solid rgba(139,92,246,0.25);}
+        .ec-action-btn.notes:hover{background:rgba(139,92,246,0.22);transform:translateY(-1px);}
+
         .ec-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;color:#4b5563;text-align:center;padding:40px 20px;position:relative;z-index:1;}
         .ec-empty-icon{opacity:0.3;margin-bottom:16px;}
         .ec-empty h3{font-family:'Syne',sans-serif;font-size:20px;color:#6b7280;margin-bottom:8px;}
         .ec-empty p{font-size:14px;margin-bottom:24px;}
         .ec-empty-btn{background:#6366f1;color:white;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;padding:10px 24px;border:none;border-radius:12px;cursor:pointer;transition:background 0.2s;}
         .ec-empty-btn:hover{background:#4f46e5;}
+
+        /* ── SmartRecommendations section wrapper ── */
+        .ec-recommendations{padding:48px 48px 0;position:relative;z-index:1;}
+        @media(max-width:600px){.ec-recommendations{padding:32px 20px 0;}}
       `}</style>
 
       <div className="ec-root">
@@ -152,130 +166,159 @@ function MyEnrolledCourses() {
             </button>
           </div>
         ) : (
-          <div className="ec-grid">
-            {enrolledCourses.map((course, i) => {
-              const { percent, completed, done } = getProgress(course._id);
-              const lectureCount = course.lectures?.length ?? 0;
+          <>
+            <div className="ec-grid">
+              {enrolledCourses.map((course, i) => {
+                const { percent, completed, done } = getProgress(course._id);
+                const lectureCount = course.lectures?.length ?? 0;
 
-              return (
-                <div
-                  key={course._id || i}
-                  className={`ec-card ${done ? "done-card" : ""}`}
-                  style={{ animationDelay: `${i * 0.05}s` }}
-                  onClick={() => navigate(`/viewlecture/${course._id}`)}
-                >
-                  {/* Thumbnail */}
-                  <div className="ec-thumb-wrap">
-                    {course.thumbnail ? (
-                      <img
-                        src={course.thumbnail}
-                        alt={course.title}
-                        className="ec-thumb"
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                          e.target.parentNode.querySelector(
-                            ".ec-placeholder",
-                          ).style.display = "flex";
-                        }}
-                      />
-                    ) : null}
-                    <div
-                      className="ec-placeholder"
-                      style={{
-                        display: course.thumbnail ? "none" : "flex",
-                        position: course.thumbnail ? "absolute" : "relative",
-                        inset: 0,
-                      }}
-                    >
-                      <FaGraduationCap size={40} />
-                      <span style={{ fontSize: 12 }}>
-                        {course.category || "Course"}
-                      </span>
-                    </div>
-
-                    <div className="ec-overlay">
-                      <FaPlayCircle
-                        size={52}
-                        color="white"
-                        style={{
-                          filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.6))",
-                        }}
-                      />
-                    </div>
-
-                    {course.category && (
-                      <span className="ec-cat-badge">{course.category}</span>
-                    )}
-
-                    {done && (
-                      <span className="ec-done-badge">
-                        <FaCheckCircle size={10} /> Done
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Body */}
-                  <div className="ec-body">
-                    <h2 className="ec-course-title">
-                      {course.title || "Untitled Course"}
-                    </h2>
-
-                    <div className="ec-meta">
-                      {course.level && (
-                        <span className="ec-level">{course.level}</span>
-                      )}
-                      <span style={{ fontSize: 11, color: "#4b5563" }}>
-                        {lectureCount} lecture{lectureCount !== 1 ? "s" : ""}
-                      </span>
-                    </div>
-
-                    {/* Real progress bar */}
-                    <div className="ec-prog-wrap">
-                      <div className="ec-prog-label">
-                        <span>
-                          {done
-                            ? "🎉 Completed!"
-                            : percent > 0
-                              ? `${completed} lecture${completed !== 1 ? "s" : ""} done`
-                              : "Not started"}
-                        </span>
-                        <span
-                          style={{
-                            color: done ? "#22c55e" : "#6b7280",
-                            fontWeight: 600,
+                return (
+                  <div
+                    key={course._id || i}
+                    className={`ec-card ${done ? "done-card" : ""}`}
+                    style={{ animationDelay: `${i * 0.05}s` }}
+                    onClick={() => navigate(`/viewlecture/${course._id}`)}
+                  >
+                    {/* Thumbnail */}
+                    <div className="ec-thumb-wrap">
+                      {course.thumbnail ? (
+                        <img
+                          src={course.thumbnail}
+                          alt={course.title}
+                          className="ec-thumb"
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                            e.target.parentNode.querySelector(
+                              ".ec-placeholder",
+                            ).style.display = "flex";
                           }}
-                        >
-                          {percent}%
+                        />
+                      ) : null}
+                      <div
+                        className="ec-placeholder"
+                        style={{
+                          display: course.thumbnail ? "none" : "flex",
+                          position: course.thumbnail ? "absolute" : "relative",
+                          inset: 0,
+                        }}
+                      >
+                        <FaGraduationCap size={40} />
+                        <span style={{ fontSize: 12 }}>
+                          {course.category || "Course"}
                         </span>
                       </div>
-                      <div className="ec-prog-track">
-                        <div
-                          className={`ec-prog-fill ${done ? "green" : "indigo"}`}
-                          style={{ width: `${percent}%` }}
+
+                      <div className="ec-overlay">
+                        <FaPlayCircle
+                          size={52}
+                          color="white"
+                          style={{
+                            filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.6))",
+                          }}
                         />
                       </div>
+
+                      {course.category && (
+                        <span className="ec-cat-badge">{course.category}</span>
+                      )}
+
+                      {done && (
+                        <span className="ec-done-badge">
+                          <FaCheckCircle size={10} /> Done
+                        </span>
+                      )}
                     </div>
 
-                    {/* CTA — changes based on progress */}
-                    <button
-                      className={`ec-btn ${done ? "rewatch" : percent > 0 ? "resume" : "start"}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/viewlecture/${course._id}`);
-                      }}
-                    >
-                      <FaPlayCircle size={14} />
-                      {done
-                        ? "Rewatch Course"
-                        : percent > 0
-                          ? "Resume"
-                          : "Start Learning"}
-                    </button>
+                    {/* Body */}
+                    <div className="ec-body">
+                      <h2 className="ec-course-title">
+                        {course.title || "Untitled Course"}
+                      </h2>
+
+                      <div className="ec-meta">
+                        {course.level && (
+                          <span className="ec-level">{course.level}</span>
+                        )}
+                        <span style={{ fontSize: 11, color: "#4b5563" }}>
+                          {lectureCount} lecture{lectureCount !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="ec-prog-wrap">
+                        <div className="ec-prog-label">
+                          <span>
+                            {done
+                              ? "🎉 Completed!"
+                              : percent > 0
+                                ? `${completed} lecture${completed !== 1 ? "s" : ""} done`
+                                : "Not started"}
+                          </span>
+                          <span
+                            style={{
+                              color: done ? "#22c55e" : "#6b7280",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {percent}%
+                          </span>
+                        </div>
+                        <div className="ec-prog-track">
+                          <div
+                            className={`ec-prog-fill ${done ? "green" : "indigo"}`}
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Watch CTA */}
+                      <button
+                        className={`ec-btn ${done ? "rewatch" : percent > 0 ? "resume" : "start"}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/viewlecture/${course._id}`);
+                        }}
+                      >
+                        <FaPlayCircle size={14} />
+                        {done
+                          ? "Rewatch Course"
+                          : percent > 0
+                            ? "Resume"
+                            : "Start Learning"}
+                      </button>
+
+                      {/* ✅ NEW: Quiz + AI Notes buttons */}
+                      <div className="ec-action-row">
+                        <button
+                          className="ec-action-btn quiz"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/quiz/${course._id}`);
+                          }}
+                        >
+                          <FaBrain size={13} /> Take Quiz
+                        </button>
+                        <button
+                          className="ec-action-btn notes"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/notes/${course._id}`);
+                          }}
+                        >
+                          <FaStickyNote size={13} /> AI Notes
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+
+            {/* ✅ NEW: Smart Recommendations section */}
+            <div className="ec-recommendations">
+              <SmartRecommendations />
+            </div>
+          </>
         )}
       </div>
     </>

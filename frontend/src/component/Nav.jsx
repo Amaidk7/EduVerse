@@ -217,7 +217,7 @@ function Nav() {
               {/* Dropdown */}
               {showDropdown && (
                 <div
-                  className="dropdown-menu absolute right-0 mt-2 w-48"
+                  className="dropdown-menu absolute right-0 mt-2 w-52"
                   style={{ top: "100%" }}
                 >
                   {/* User info header */}
@@ -239,34 +239,59 @@ function Nav() {
                     className="dropdown-item"
                     onClick={() => { navigate("/profile"); setShowDropdown(false); }}
                   >
-                    My Profile
+                    👤 My Profile
                   </div>
 
-                  {/* ✅ Student Dashboard — only for students */}
+                  {/* Student-only items */}
                   {!isEducator && (
+                    <>
+                      <div
+                        className="dropdown-item"
+                        onClick={() => { navigate("/student-dashboard"); setShowDropdown(false); }}
+                      >
+                        📊 My Dashboard
+                      </div>
+                      <div
+                        className="dropdown-item"
+                        onClick={() => { navigate("/mycourses"); setShowDropdown(false); }}
+                      >
+                        🎓 My Courses
+                      </div>
+                      {/* ✅ NEW: Wishlist */}
+                      <div
+                        className="dropdown-item"
+                        onClick={() => { navigate("/wishlist"); setShowDropdown(false); }}
+                      >
+                        ♡ My Wishlist
+                      </div>
+                      {/* ✅ NEW: Learning Roadmap */}
+                      <div
+                        className="dropdown-item"
+                        onClick={() => { navigate("/roadmap"); setShowDropdown(false); }}
+                      >
+                        🗺 Learning Roadmap
+                      </div>
+                    </>
+                  )}
+
+                  {/* Educator-only items */}
+                  {isEducator && (
                     <div
                       className="dropdown-item"
-                      onClick={() => { navigate("/student-dashboard"); setShowDropdown(false); }}
+                      onClick={() => { navigate("/mycourses"); setShowDropdown(false); }}
                     >
-                      My Dashboard
+                      🎓 My Courses
                     </div>
                   )}
 
                   <div
                     className="dropdown-item"
-                    onClick={() => { navigate("/mycourses"); setShowDropdown(false); }}
-                  >
-                    My Courses
-                  </div>
-
-                  <div
-                    className="dropdown-item"
                     onClick={handleLogOut}
-                    style={{ color: "#ef4444" }}
+                    style={{ color: "#ef4444", borderTop: "1px solid var(--border)", marginTop: 4 }}
                     onMouseEnter={(e) => (e.currentTarget.style.background = "#fff1f1")}
                     onMouseLeave={(e) => (e.currentTarget.style.background = "")}
                   >
-                    Log Out
+                    🚪 Log Out
                   </div>
                 </div>
               )}
@@ -371,25 +396,50 @@ function Nav() {
                   onClick={() => { navigate("/profile"); setShowMobile(false); }}
                   style={mobileNavBtnStyle}
                 >
-                  My Profile
+                  👤 My Profile
                 </button>
 
-                {/* ✅ Student Dashboard — only for students */}
+                {/* Student-only mobile links */}
                 {!isEducator && (
-                  <button
-                    onClick={() => { navigate("/student-dashboard"); setShowMobile(false); }}
-                    style={mobileNavBtnStyle}
-                  >
-                    My Dashboard
-                  </button>
+                  <>
+                    <button
+                      onClick={() => { navigate("/student-dashboard"); setShowMobile(false); }}
+                      style={mobileNavBtnStyle}
+                    >
+                      📊 My Dashboard
+                    </button>
+                    <button
+                      onClick={() => { navigate("/mycourses"); setShowMobile(false); }}
+                      style={mobileNavBtnStyle}
+                    >
+                      🎓 My Courses
+                    </button>
+                    {/* ✅ NEW: Wishlist */}
+                    <button
+                      onClick={() => { navigate("/wishlist"); setShowMobile(false); }}
+                      style={mobileNavBtnStyle}
+                    >
+                      ♡ My Wishlist
+                    </button>
+                    {/* ✅ NEW: Learning Roadmap */}
+                    <button
+                      onClick={() => { navigate("/roadmap"); setShowMobile(false); }}
+                      style={mobileNavBtnStyle}
+                    >
+                      🗺 Learning Roadmap
+                    </button>
+                  </>
                 )}
 
-                <button
-                  onClick={() => { navigate("/mycourses"); setShowMobile(false); }}
-                  style={mobileNavBtnStyle}
-                >
-                  My Courses
-                </button>
+                {/* Educator-only mobile links */}
+                {isEducator && (
+                  <button
+                    onClick={() => { navigate("/mycourses"); setShowMobile(false); }}
+                    style={mobileNavBtnStyle}
+                  >
+                    🎓 My Courses
+                  </button>
+                )}
               </>
             )}
 
@@ -423,7 +473,7 @@ function Nav() {
                     fontSize: 14,
                   }}
                 >
-                  Log Out
+                  🚪 Log Out
                 </button>
               )}
             </div>

@@ -1,132 +1,141 @@
-import axios from 'axios'
-import React, { useEffect, useState, useCallback } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
-import { useNavigate, useParams } from 'react-router-dom'
-import { serverUrl } from '../App'
-import { setUserData } from '../redux/userSlice'
-import { FaArrowLeftLong } from "react-icons/fa6"
-import { FaPlayCircle, FaCheckCircle } from "react-icons/fa"
+import axios from "axios";
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
+import { serverUrl } from "../App";
+import { setUserData } from "../redux/userSlice";
+import { FaArrowLeftLong } from "react-icons/fa6";
+import { FaPlayCircle, FaCheckCircle } from "react-icons/fa";
+import DoubtSolver from "../component/DoubtSolver";
 
 function ViewLectures() {
-    const { courseId } = useParams()
-    const navigate     = useNavigate()
-    const dispatch     = useDispatch()
+  const { courseId } = useParams();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-    const { courseData } = useSelector(state => state.course)
-    const { userData }   = useSelector(state => state.user)
+  const { courseData } = useSelector((state) => state.course);
+  const { userData } = useSelector((state) => state.user);
 
-    const selectedCourse = courseData?.find(c => c._id === courseId)
+  const selectedCourse = courseData?.find((c) => c._id === courseId);
 
-    const [creatorData,      setCreatorData]      = useState(null)
-    const [selectedLecture,  setSelectedLecture]  = useState(null)
-    const [completedIds,     setCompletedIds]      = useState([])   // lecture IDs done
-    const [progressPercent,  setProgressPercent]  = useState(0)
-    const [markingDone,      setMarkingDone]       = useState(false)
+  const [creatorData, setCreatorData] = useState(null);
+  const [selectedLecture, setSelectedLecture] = useState(null);
+  const [completedIds, setCompletedIds] = useState([]);
+  const [progressPercent, setProgressPercent] = useState(0);
+  const [markingDone, setMarkingDone] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const videoRef = useRef(null);
 
-    // ── set first lecture on load ──────────────────────────────────────
-    useEffect(() => {
-        if(selectedCourse?.lectures?.length && !selectedLecture){
-            setSelectedLecture(selectedCourse.lectures[0])
-        }
-    }, [selectedCourse])
-
-    // ── fetch creator ──────────────────────────────────────────────────
-    useEffect(() => {
-        if(!selectedCourse?.creator) return
-        const fetchCreator = async () => {
-            try {
-                const { data } = await axios.post(
-                    serverUrl + "/api/course/creator",
-                    { userId: selectedCourse.creator },
-                    { withCredentials: true }
-                )
-                setCreatorData(data)
-            } catch(e) { console.error(e) }
-        }
-        fetchCreator()
-    }, [selectedCourse])
-
-    // ── load existing progress from backend ────────────────────────────
-    useEffect(() => {
-        if(!courseId) return
-        const fetchProgress = async () => {
-            try {
-                const { data } = await axios.get(
-                    serverUrl + `/api/user/progress/${courseId}`,
-                    { withCredentials: true }
-                )
-                setCompletedIds(data.completedLectures || [])
-                setProgressPercent(data.progressPercent || 0)
-
-                // jump to last watched lecture if exists
-                if(data.lastWatched && selectedCourse?.lectures?.length){
-                    const last = selectedCourse.lectures.find(
-                        l => l._id === data.lastWatched
-                    )
-                    if(last) setSelectedLecture(last)
-                }
-            } catch(e) {
-                // no progress yet — that's fine
-            }
-        }
-        fetchProgress()
-    }, [courseId])
-
-    // ── mark lecture complete (called on video end OR manual button) ───
-    const handleMarkComplete = useCallback(async (lectureId) => {
-        if(!lectureId) return
-        // already marked — skip
-        const alreadyDone = completedIds.some(
-            id => id.toString() === lectureId.toString()
-        )
-        if(alreadyDone) return
-
-        setMarkingDone(true)
-        try {
-            const { data } = await axios.post(
-                serverUrl + "/api/user/progress",
-                { courseId, lectureId },
-                { withCredentials: true }
-            )
-            // update local state immediately
-            setCompletedIds(data.progress.completedLectures || [])
-            setProgressPercent(data.progress.progressPercent || 0)
-
-            // refresh userData in Redux so MyEnrolledCourses also updates
-            const userRes = await axios.get(
-                serverUrl + "/api/user/getcurrentuser",
-                { withCredentials: true }
-            )
-            dispatch(setUserData(userRes.data))
-
-        } catch(e) {
-            console.error("Failed to mark lecture complete:", e)
-        } finally {
-            setMarkingDone(false)
-        }
-    }, [completedIds, courseId, dispatch])
-
-    const isCompleted = (lectureId) =>
-        completedIds.some(id => id.toString() === lectureId?.toString())
-
-    const totalLectures = selectedCourse?.lectures?.length || 0
-
-    // ── auto-advance to next lecture after video ends ──────────────────
-    const handleVideoEnd = () => {
-        if(!selectedLecture) return
-        handleMarkComplete(selectedLecture._id)
-
-        // go to next lecture automatically
-        const lectures = selectedCourse?.lectures || []
-        const currentIdx = lectures.findIndex(l => l._id === selectedLecture._id)
-        if(currentIdx < lectures.length - 1){
-            setSelectedLecture(lectures[currentIdx + 1])
-        }
+  // ── set first lecture on load ──────────────────────────────────────
+  useEffect(() => {
+    if (selectedCourse?.lectures?.length && !selectedLecture) {
+      setSelectedLecture(selectedCourse.lectures[0]);
     }
+  }, [selectedCourse]);
 
-    return (
-        <>
-        <style>{`
+  // ── fetch creator ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (!selectedCourse?.creator) return;
+    const fetchCreator = async () => {
+      try {
+        const { data } = await axios.post(
+          serverUrl + "/api/course/creator",
+          { userId: selectedCourse.creator },
+          { withCredentials: true },
+        );
+        setCreatorData(data);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchCreator();
+  }, [selectedCourse]);
+
+  // ── load existing progress from backend ────────────────────────────
+  useEffect(() => {
+    if (!courseId) return;
+    const fetchProgress = async () => {
+      try {
+        const { data } = await axios.get(
+          serverUrl + `/api/user/progress/${courseId}`,
+          { withCredentials: true },
+        );
+        setCompletedIds(data.completedLectures || []);
+        setProgressPercent(data.progressPercent || 0);
+
+        if (data.lastWatched && selectedCourse?.lectures?.length) {
+          const last = selectedCourse.lectures.find(
+            (l) => l._id === data.lastWatched,
+          );
+          if (last) setSelectedLecture(last);
+        }
+      } catch (e) {
+        // no progress yet — that's fine
+      }
+    };
+    fetchProgress();
+  }, [courseId]);
+
+  // ── mark lecture complete ──────────────────────────────────────────
+  const handleMarkComplete = useCallback(
+    async (lectureId) => {
+      if (!lectureId) return;
+      const alreadyDone = completedIds.some(
+        (id) => id.toString() === lectureId.toString(),
+      );
+      if (alreadyDone) return;
+
+      setMarkingDone(true);
+      try {
+        const { data } = await axios.post(
+          serverUrl + "/api/user/progress",
+          { courseId, lectureId },
+          { withCredentials: true },
+        );
+        setCompletedIds(data.progress.completedLectures || []);
+        setProgressPercent(data.progress.progressPercent || 0);
+
+        const userRes = await axios.get(
+          serverUrl + "/api/user/getcurrentuser",
+          { withCredentials: true },
+        );
+        dispatch(setUserData(userRes.data));
+      } catch (e) {
+        console.error("Failed to mark lecture complete:", e);
+      } finally {
+        setMarkingDone(false);
+      }
+    },
+    [completedIds, courseId, dispatch],
+  );
+
+  const isCompleted = (lectureId) =>
+    completedIds.some((id) => id.toString() === lectureId?.toString());
+
+  const totalLectures = selectedCourse?.lectures?.length || 0;
+
+  // ── auto-advance on video end ──────────────────────────────────────
+  const handleVideoEnd = () => {
+    if (!selectedLecture) return;
+    handleMarkComplete(selectedLecture._id);
+
+    const lectures = selectedCourse?.lectures || [];
+    const currentIdx = lectures.findIndex((l) => l._id === selectedLecture._id);
+    if (currentIdx < lectures.length - 1) {
+      setSelectedLecture(lectures[currentIdx + 1]);
+    }
+  };
+
+  // ── apply playback speed ───────────────────────────────────────────
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = playbackSpeed;
+    }
+  }, [playbackSpeed, selectedLecture]);
+
+  return (
+    <>
+      <style>{`
             @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
             .vl-root {
                 min-height:100vh;
@@ -135,7 +144,6 @@ function ViewLectures() {
                 display:flex;
                 flex-direction:column;
             }
-            /* top bar */
             .vl-topbar {
                 background:#111118;
                 border-bottom:1px solid #1f1f2e;
@@ -162,16 +170,13 @@ function ViewLectures() {
             .vl-topbar-meta {
                 font-size:12px;color:#4b5563;white-space:nowrap;
             }
-            /* main layout */
             .vl-body {
                 display:flex;flex:1;overflow:hidden;
             }
-            /* left: video area */
             .vl-left {
                 flex:1;padding:24px;display:flex;flex-direction:column;gap:16px;
-                min-width:0;
+                min-width:0;overflow-y:auto;
             }
-            /* video player */
             .vl-player-wrap {
                 background:#000;
                 border-radius:16px;
@@ -189,7 +194,6 @@ function ViewLectures() {
                 align-items:center;justify-content:center;
                 color:#4b5563;gap:12px;
             }
-            /* lecture info bar */
             .vl-lecture-info {
                 background:#111118;
                 border:1px solid #1f1f2e;
@@ -225,7 +229,25 @@ function ViewLectures() {
             }
             .vl-mark-btn.undone:hover{background:#4f46e5;}
             .vl-mark-btn:disabled{opacity:0.6;cursor:not-allowed;}
-            /* overall progress bar */
+            .vl-speed-bar {
+                display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+            }
+            .vl-speed-label {
+                font-size:12px;color:#6b7280;font-weight:600;
+                text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;
+            }
+            .vl-speed-btn {
+                padding:5px 12px;border-radius:8px;
+                border:1px solid #1f1f2e;
+                background:none;cursor:pointer;
+                font-family:'DM Sans',sans-serif;
+                font-size:13px;font-weight:600;color:#6b7280;
+                transition:all 0.15s;
+            }
+            .vl-speed-btn:hover { border-color:#6366f1;color:#818cf8; }
+            .vl-speed-btn.active {
+                background:#6366f1;color:white;border-color:#6366f1;
+            }
             .vl-overall-progress {
                 background:#111118;
                 border:1px solid #1f1f2e;
@@ -245,7 +267,6 @@ function ViewLectures() {
                 border-radius:99px;
                 transition:width 0.5s ease;
             }
-            /* right: sidebar */
             .vl-sidebar {
                 width:320px;
                 flex-shrink:0;
@@ -305,7 +326,6 @@ function ViewLectures() {
             .vl-lec-name.done { color:#6b7280; }
             .vl-lec-name.active { color:#f0f0f0; }
             .vl-lec-name.pending { color:#9ca3af; }
-            /* educator section */
             .vl-educator {
                 padding:16px 20px;
                 border-top:1px solid #1f1f2e;
@@ -337,166 +357,205 @@ function ViewLectures() {
             }
         `}</style>
 
-        <div className="vl-root">
-
-            {/* ── TOP BAR ── */}
-            <div className="vl-topbar">
-                <button className="vl-back" onClick={() => navigate("/mycourses")}>
-                    <FaArrowLeftLong size={12} /> My Courses
-                </button>
-                <span className="vl-course-title">{selectedCourse?.title}</span>
-                <span className="vl-topbar-meta">
-                    {completedIds.length}/{totalLectures} completed
-                </span>
-            </div>
-
-            <div className="vl-body">
-
-                {/* ── LEFT: VIDEO + INFO ── */}
-                <div className="vl-left">
-
-                    {/* Video Player */}
-                    <div className="vl-player-wrap">
-                        {selectedLecture?.videoUrl ? (
-                            <video
-                                key={selectedLecture._id}
-                                src={selectedLecture.videoUrl}
-                                controls
-                                onEnded={handleVideoEnd}
-                                autoPlay
-                            />
-                        ) : (
-                            <div className="vl-player-empty">
-                                <FaPlayCircle size={52} color="#2a2a3e" />
-                                <p style={{fontSize:14}}>Select a lecture to start watching</p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Lecture title + mark complete button */}
-                    {selectedLecture && (
-                        <div className="vl-lecture-info">
-                            <div>
-                                <div className="vl-lecture-title">
-                                    {selectedLecture.lectureTitle}
-                                </div>
-                                <div style={{fontSize:12,color:"#4b5563",marginTop:4}}>
-                                    {selectedCourse?.category} • {selectedCourse?.level}
-                                </div>
-                            </div>
-
-                            {isCompleted(selectedLecture._id) ? (
-                                <button className="vl-mark-btn done" disabled>
-                                    <FaCheckCircle size={14} /> Completed
-                                </button>
-                            ) : (
-                                <button
-                                    className="vl-mark-btn undone"
-                                    disabled={markingDone}
-                                    onClick={() => handleMarkComplete(selectedLecture._id)}
-                                >
-                                    {markingDone ? "Saving..." : "✓ Mark as Complete"}
-                                </button>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Overall course progress */}
-                    <div className="vl-overall-progress">
-                        <div className="vl-prog-header">
-                            <span>Course Progress</span>
-                            <span style={{
-                                color: progressPercent === 100 ? "#22c55e" : "#6b7280",
-                                fontWeight: 600
-                            }}>
-                                {progressPercent}%
-                                {progressPercent === 100 && " 🎉 Completed!"}
-                            </span>
-                        </div>
-                        <div className="vl-prog-track">
-                            <div
-                                className="vl-prog-fill"
-                                style={{ width: `${progressPercent}%` }}
-                            />
-                        </div>
-                    </div>
-
-                </div>
-
-                {/* ── RIGHT: SIDEBAR ── */}
-                <div className="vl-sidebar">
-                    <div className="vl-sidebar-header">
-                        <div className="vl-sidebar-title">Course Content</div>
-                        <div className="vl-sidebar-sub">
-                            {totalLectures} lectures • {completedIds.length} done
-                        </div>
-                    </div>
-
-                    <div className="vl-lecture-list">
-                        {selectedCourse?.lectures?.length > 0 ? (
-                            selectedCourse.lectures.map((lecture, i) => {
-                                const done   = isCompleted(lecture._id)
-                                const active = selectedLecture?._id === lecture._id
-                                const state  = done ? "done" : active ? "active" : "pending"
-
-                                return (
-                                    <button
-                                        key={lecture._id || i}
-                                        className={`vl-lec-btn ${active ? "active" : ""}`}
-                                        onClick={() => setSelectedLecture(lecture)}
-                                    >
-                                        {/* number/check badge */}
-                                        <div className={`vl-lec-num ${state}`}>
-                                            {done
-                                                ? <FaCheckCircle size={13} />
-                                                : i + 1
-                                            }
-                                        </div>
-
-                                        <span className={`vl-lec-name ${state}`}>
-                                            {lecture.lectureTitle}
-                                        </span>
-                                    </button>
-                                )
-                            })
-                        ) : (
-                            <p style={{fontSize:13,color:"#4b5563",padding:"20px 0",textAlign:"center"}}>
-                                No lectures available.
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Educator info */}
-                    {creatorData && (
-                        <div className="vl-educator">
-                            <div className="vl-educator-title">Instructor</div>
-                            <div className="vl-educator-row">
-                                {creatorData.photoUrl ? (
-                                    <img
-                                        src={creatorData.photoUrl}
-                                        className="vl-edu-avatar"
-                                        alt={creatorData.name}
-                                    />
-                                ) : (
-                                    <div className="vl-edu-fallback">
-                                        {creatorData.name?.charAt(0).toUpperCase()}
-                                    </div>
-                                )}
-                                <div>
-                                    <div className="vl-edu-name">{creatorData.name}</div>
-                                    {creatorData.description && (
-                                        <div className="vl-edu-bio">{creatorData.description}</div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-            </div>
+      <div className="vl-root">
+        {/* ── TOP BAR ── */}
+        <div className="vl-topbar">
+          <button className="vl-back" onClick={() => navigate("/mycourses")}>
+            <FaArrowLeftLong size={12} /> My Courses
+          </button>
+          <span className="vl-course-title">{selectedCourse?.title}</span>
+          <span className="vl-topbar-meta">
+            {completedIds.length}/{totalLectures} completed
+          </span>
         </div>
-        </>
-    )
+
+        <div className="vl-body">
+          {/* ── LEFT: VIDEO + INFO ── */}
+          <div className="vl-left">
+            {/* Video Player */}
+            <div className="vl-player-wrap">
+              {selectedLecture?.videoUrl ? (
+                <video
+                  ref={videoRef}
+                  key={selectedLecture._id}
+                  src={selectedLecture.videoUrl}
+                  controls
+                  onEnded={handleVideoEnd}
+                  autoPlay
+                />
+              ) : (
+                <div className="vl-player-empty">
+                  <FaPlayCircle size={52} color="#2a2a3e" />
+                  <p style={{ fontSize: 14 }}>
+                    Select a lecture to start watching
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Lecture title + mark complete */}
+            {selectedLecture && (
+              <div className="vl-lecture-info">
+                <div>
+                  <div className="vl-lecture-title">
+                    {selectedLecture.lectureTitle}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#4b5563", marginTop: 4 }}>
+                    {selectedCourse?.category} • {selectedCourse?.level}
+                  </div>
+                </div>
+
+                {isCompleted(selectedLecture._id) ? (
+                  <button className="vl-mark-btn done" disabled>
+                    <FaCheckCircle size={14} /> Completed
+                  </button>
+                ) : (
+                  <button
+                    className="vl-mark-btn undone"
+                    disabled={markingDone}
+                    onClick={() => handleMarkComplete(selectedLecture._id)}
+                  >
+                    {markingDone ? "Saving..." : "✓ Mark as Complete"}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Speed Control */}
+            {selectedLecture?.videoUrl && (
+              <div
+                style={{
+                  background: "#111118",
+                  border: "1px solid #1f1f2e",
+                  borderRadius: 14,
+                  padding: "12px 20px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
+              >
+                <span className="vl-speed-label">Speed</span>
+                <div className="vl-speed-bar">
+                  {[0.5, 0.75, 1, 1.25, 1.5, 2].map((speed) => (
+                    <button
+                      key={speed}
+                      className={`vl-speed-btn ${playbackSpeed === speed ? "active" : ""}`}
+                      onClick={() => setPlaybackSpeed(speed)}
+                    >
+                      {speed === 1 ? "1x (Normal)" : `${speed}x`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Overall course progress */}
+            <div className="vl-overall-progress">
+              <div className="vl-prog-header">
+                <span>Course Progress</span>
+                <span
+                  style={{
+                    color: progressPercent === 100 ? "#22c55e" : "#6b7280",
+                    fontWeight: 600,
+                  }}
+                >
+                  {progressPercent}%
+                  {progressPercent === 100 && " 🎉 Completed!"}
+                </span>
+              </div>
+              <div className="vl-prog-track">
+                <div
+                  className="vl-prog-fill"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+
+            {/* ✅ NEW: DoubtSolver — AI Q&A for current lecture */}
+            <DoubtSolver
+              courseTitle={selectedCourse?.title}
+              lectureTitle={selectedLecture?.lectureTitle}
+            />
+          </div>
+
+          {/* ── RIGHT: SIDEBAR ── */}
+          <div className="vl-sidebar">
+            <div className="vl-sidebar-header">
+              <div className="vl-sidebar-title">Course Content</div>
+              <div className="vl-sidebar-sub">
+                {totalLectures} lectures • {completedIds.length} done
+              </div>
+            </div>
+
+            <div className="vl-lecture-list">
+              {selectedCourse?.lectures?.length > 0 ? (
+                selectedCourse.lectures.map((lecture, i) => {
+                  const done = isCompleted(lecture._id);
+                  const active = selectedLecture?._id === lecture._id;
+                  const state = done ? "done" : active ? "active" : "pending";
+
+                  return (
+                    <button
+                      key={lecture._id || i}
+                      className={`vl-lec-btn ${active ? "active" : ""}`}
+                      onClick={() => setSelectedLecture(lecture)}
+                    >
+                      <div className={`vl-lec-num ${state}`}>
+                        {done ? <FaCheckCircle size={13} /> : i + 1}
+                      </div>
+                      <span className={`vl-lec-name ${state}`}>
+                        {lecture.lectureTitle}
+                      </span>
+                    </button>
+                  );
+                })
+              ) : (
+                <p
+                  style={{
+                    fontSize: 13,
+                    color: "#4b5563",
+                    padding: "20px 0",
+                    textAlign: "center",
+                  }}
+                >
+                  No lectures available.
+                </p>
+              )}
+            </div>
+
+            {/* Educator info */}
+            {creatorData && (
+              <div className="vl-educator">
+                <div className="vl-educator-title">Instructor</div>
+                <div className="vl-educator-row">
+                  {creatorData.photoUrl ? (
+                    <img
+                      src={creatorData.photoUrl}
+                      className="vl-edu-avatar"
+                      alt={creatorData.name}
+                    />
+                  ) : (
+                    <div className="vl-edu-fallback">
+                      {creatorData.name?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <div className="vl-edu-name">{creatorData.name}</div>
+                    {creatorData.description && (
+                      <div className="vl-edu-bio">
+                        {creatorData.description}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
 }
 
-export default ViewLectures
+export default ViewLectures;
