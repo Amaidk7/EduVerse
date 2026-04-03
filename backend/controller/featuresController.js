@@ -6,7 +6,6 @@ import PDFDocument from "pdfkit"
 
 // ─── PROGRESS ────────────────────────────────────────────────────────────
 
-// Mark a lecture as complete
 export const markLectureComplete = async (req, res) => {
     try {
         const { courseId, lectureId } = req.body
@@ -29,7 +28,6 @@ export const markLectureComplete = async (req, res) => {
             }
         }
 
-        // Check if all lectures completed
         const totalLectures = course.lectures.length
         if (progress.completedLectures.length >= totalLectures && totalLectures > 0) {
             progress.isCompleted = true
@@ -43,7 +41,6 @@ export const markLectureComplete = async (req, res) => {
     }
 }
 
-// Get progress for a course
 export const getCourseProgress = async (req, res) => {
     try {
         const { courseId } = req.params
@@ -84,6 +81,7 @@ export const generateCertificate = async (req, res) => {
         }
 
         const user = await User.findById(userId).select("-password")
+        // BUG FIX: creator name populate karo
         const course = await Course.findById(courseId).populate("creator", "name")
 
         if (!user || !course) return res.status(404).json({ message: "Not found" })
@@ -91,6 +89,10 @@ export const generateCertificate = async (req, res) => {
         const completedDate = progress.completedAt
             ? new Date(progress.completedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
             : new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
+
+        // Student aur Instructor ke names
+        const studentName = user.name || "Student"
+        const instructorName = course.creator?.name || "EduVerse Educator"
 
         // Build PDF
         const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 0 })
@@ -108,20 +110,21 @@ export const generateCertificate = async (req, res) => {
         doc.rect(20, 20, W - 40, H - 40).lineWidth(2).stroke("#6c63ff")
         doc.rect(28, 28, W - 56, H - 56).lineWidth(0.5).stroke("#6c63ff")
 
-        // Top accent bar
+        // Top & bottom accent bar
         doc.rect(0, 0, W, 8).fill("#6c63ff")
         doc.rect(0, H - 8, W, 8).fill("#6c63ff")
 
-        // Corner decorations
+        // Corner dots
         const corners = [[40, 40], [W - 40, 40], [40, H - 40], [W - 40, H - 40]]
         corners.forEach(([x, y]) => {
             doc.circle(x, y, 6).fill("#6c63ff")
         })
 
         // EduVerse brand
-        doc.fontSize(13).font("Helvetica-Bold").fillColor("#6c63ff").text("EduVerse", 0, 55, { align: "center" })
+        doc.fontSize(13).font("Helvetica-Bold").fillColor("#6c63ff")
+            .text("EduVerse", 0, 55, { align: "center" })
 
-        // Certificate of Completion
+        // Title
         doc.fontSize(36).font("Helvetica-Bold").fillColor("#0f0e0d")
             .text("Certificate of Completion", 0, 90, { align: "center" })
 
@@ -132,12 +135,12 @@ export const generateCertificate = async (req, res) => {
         doc.fontSize(14).font("Helvetica").fillColor("#5a5855")
             .text("This is to certify that", 0, 165, { align: "center" })
 
-        // Student name
+        // Student name (bold italic)
         doc.fontSize(44).font("Helvetica-BoldOblique").fillColor("#0f0e0d")
-            .text(user.name, 0, 190, { align: "center" })
+            .text(studentName, 0, 190, { align: "center" })
 
         // Name underline
-        const nameWidth = doc.widthOfString(user.name, { fontSize: 44 })
+        const nameWidth = doc.widthOfString(studentName, { fontSize: 44 })
         const nameX = (W - Math.min(nameWidth, 500)) / 2
         doc.moveTo(nameX, 248).lineTo(W - nameX, 248).lineWidth(1).stroke("#ddd")
 
@@ -156,26 +159,36 @@ export const generateCertificate = async (req, res) => {
                 .text(meta, 0, 330, { align: "center" })
         }
 
-        // Bottom section
+        // Divider before footer
         doc.moveTo(200, 365).lineTo(W - 200, 365).lineWidth(0.5).stroke("#ddd")
 
-        // Date + Instructor
+        // Date + Instructor label
         doc.fontSize(11).font("Helvetica").fillColor("#5a5855")
-        doc.text(`Completed on: ${completedDate}`, 120, 380)
-        doc.text(`Instructor: ${course.creator?.name || "EduVerse Educator"}`, W - 350, 380)
+        doc.text(`Completed on: ${completedDate}`, 120, 382)
+        doc.text(`Instructor: ${instructorName}`, W - 350, 382)
 
-        // Signature line
-        doc.moveTo(120, 430).lineTo(320, 430).lineWidth(1).stroke("#0f0e0d")
-        doc.moveTo(W - 320, 430).lineTo(W - 120, 430).lineWidth(1).stroke("#0f0e0d")
+        // ── SIGNATURE LINES ──────────────────────────────────────────
 
+        // Left signature line (Student)
+        doc.moveTo(120, 435).lineTo(340, 435).lineWidth(1).stroke("#0f0e0d")
+        // Student name below line
+        doc.fontSize(12).font("Helvetica-Bold").fillColor("#0f0e0d")
+            .text(studentName, 120, 440, { width: 220, align: "center" })
         doc.fontSize(10).font("Helvetica").fillColor("#9a9793")
-        doc.text("Student Signature", 120, 438, { width: 200, align: "center" })
-        doc.text("Authorized Signature", W - 320, 438, { width: 200, align: "center" })
+            .text("Student", 120, 456, { width: 220, align: "center" })
+
+        // Right signature line (Instructor/Authorized)
+        doc.moveTo(W - 340, 435).lineTo(W - 120, 435).lineWidth(1).stroke("#0f0e0d")
+        // Instructor name below line
+        doc.fontSize(12).font("Helvetica-Bold").fillColor("#0f0e0d")
+            .text(instructorName, W - 340, 440, { width: 220, align: "center" })
+        doc.fontSize(10).font("Helvetica").fillColor("#9a9793")
+            .text("Authorized Signatory", W - 340, 456, { width: 220, align: "center" })
 
         // Certificate ID
         const certId = `EV-${courseId.toString().slice(-6).toUpperCase()}-${userId.toString().slice(-6).toUpperCase()}`
         doc.fontSize(9).fillColor("#c0bdb9")
-            .text(`Certificate ID: ${certId}`, 0, H - 30, { align: "center" })
+            .text(`Certificate ID: ${certId}`, 0, H - 28, { align: "center" })
 
         doc.end()
     } catch (error) {
