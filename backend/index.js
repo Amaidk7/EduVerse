@@ -9,6 +9,8 @@ import userRouter from "./route/userRoute.js";
 import courseRouter from "./route/courseRoute.js";
 import paymentRouter from "./route/paymentRoute.js";
 import reviewRouter from "./route/reviewRoute.js";
+import aiRouter from "./route/aiRoute.js";
+import featuresRouter from "./route/featuresRoute.js";
 
 const port = process.env.PORT;
 const app = express();
@@ -17,7 +19,7 @@ app.use(express.json());
 app.use(cors({
   origin: [
     "https://eduverse-1-cxg7.onrender.com",
-    "http://localhost:5173",  // local dev ke liye
+    "http://localhost:5173",
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
@@ -29,6 +31,8 @@ app.use("/api/user", userRouter);
 app.use("/api/course", courseRouter);
 app.use("/api/order", paymentRouter);
 app.use("/api/review", reviewRouter);
+app.use("/api/ai", aiRouter);
+app.use("/api/features", featuresRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello from Server");
