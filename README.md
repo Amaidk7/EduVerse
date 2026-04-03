@@ -12,7 +12,7 @@ Frontend
 https://eduverse-1-cxg7.onrender.com
 
 Backend API  
-https://eduverse-bgfe.onrender.com
+https://eduverse-bgfe-yti0.onrender.com
 
 GitHub Repository  
 https://github.com/Amaidk7/EduVerse
