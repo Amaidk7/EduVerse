@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { serverUrl } from "../App";
 import { setUserData } from "../redux/userSlice";
 import { FaArrowLeftLong } from "react-icons/fa6";
-import { FaPlayCircle, FaCheckCircle } from "react-icons/fa";
+import { FaPlayCircle, FaCheckCircle, FaTrophy, FaDownload } from "react-icons/fa";
 import DoubtSolver from "../component/DoubtSolver";
 
 function ViewLectures() {
@@ -22,6 +22,7 @@ function ViewLectures() {
   const [selectedLecture, setSelectedLecture] = useState(null);
   const [completedIds, setCompletedIds] = useState([]);
   const [progressPercent, setProgressPercent] = useState(0);
+  const [isCompleted, setIsCompleted] = useState(false);
   const [markingDone, setMarkingDone] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const videoRef = useRef(null);
@@ -51,24 +52,18 @@ function ViewLectures() {
     fetchCreator();
   }, [selectedCourse]);
 
-  // ── load existing progress from backend ────────────────────────────
+  // ── BUG FIX: /api/features/progress se fetch karo ─────────────────
   useEffect(() => {
     if (!courseId) return;
     const fetchProgress = async () => {
       try {
         const { data } = await axios.get(
-          serverUrl + `/api/user/progress/${courseId}`,
+          serverUrl + `/api/features/progress/${courseId}`,
           { withCredentials: true },
         );
         setCompletedIds(data.completedLectures || []);
-        setProgressPercent(data.progressPercent || 0);
-
-        if (data.lastWatched && selectedCourse?.lectures?.length) {
-          const last = selectedCourse.lectures.find(
-            (l) => l._id === data.lastWatched,
-          );
-          if (last) setSelectedLecture(last);
-        }
+        setProgressPercent(data.percentage || 0);
+        setIsCompleted(data.isCompleted || false);
       } catch (e) {
         // no progress yet — that's fine
       }
@@ -76,7 +71,7 @@ function ViewLectures() {
     fetchProgress();
   }, [courseId]);
 
-  // ── mark lecture complete ──────────────────────────────────────────
+  // ── BUG FIX: /api/features/progress/mark pe call karo ─────────────
   const handleMarkComplete = useCallback(
     async (lectureId) => {
       if (!lectureId) return;
@@ -88,13 +83,20 @@ function ViewLectures() {
       setMarkingDone(true);
       try {
         const { data } = await axios.post(
-          serverUrl + "/api/user/progress",
+          serverUrl + "/api/features/progress/mark",
           { courseId, lectureId },
           { withCredentials: true },
         );
-        setCompletedIds(data.progress.completedLectures || []);
-        setProgressPercent(data.progress.progressPercent || 0);
+        setCompletedIds(data.completedLectures || []);
+        setProgressPercent(
+          data.percentage ??
+          (data.completedLectures?.length && selectedCourse?.lectures?.length
+            ? Math.round((data.completedLectures.length / selectedCourse.lectures.length) * 100)
+            : 0)
+        );
+        setIsCompleted(data.isCompleted || false);
 
+        // Redux userData bhi refresh karo
         const userRes = await axios.get(
           serverUrl + "/api/user/getcurrentuser",
           { withCredentials: true },
@@ -106,10 +108,10 @@ function ViewLectures() {
         setMarkingDone(false);
       }
     },
-    [completedIds, courseId, dispatch],
+    [completedIds, courseId, dispatch, selectedCourse],
   );
 
-  const isCompleted = (lectureId) =>
+  const isLectureCompleted = (lectureId) =>
     completedIds.some((id) => id.toString() === lectureId?.toString());
 
   const totalLectures = selectedCourse?.lectures?.length || 0;
@@ -267,6 +269,30 @@ function ViewLectures() {
                 border-radius:99px;
                 transition:width 0.5s ease;
             }
+            .vl-prog-fill.completed {
+                background:linear-gradient(90deg,#43e97b,#38f9d7);
+            }
+            .vl-certificate-bar {
+                display:flex;align-items:center;justify-content:space-between;
+                margin-top:12px;padding-top:12px;
+                border-top:1px solid #1f1f2e;
+                flex-wrap:wrap;gap:8px;
+            }
+            .vl-cert-msg {
+                display:flex;align-items:center;gap:6px;
+                font-size:13px;color:#22c55e;font-weight:600;
+            }
+            .vl-cert-btn {
+                display:inline-flex;align-items:center;gap:6px;
+                padding:7px 16px;border-radius:9px;
+                background:rgba(67,233,123,0.1);
+                border:1px solid rgba(67,233,123,0.3);
+                color:#22c55e;cursor:pointer;
+                font-size:12px;font-weight:600;
+                font-family:'DM Sans',sans-serif;
+                transition:all 0.2s;
+            }
+            .vl-cert-btn:hover{background:rgba(67,233,123,0.2);}
             .vl-sidebar {
                 width:320px;
                 flex-shrink:0;
@@ -405,7 +431,7 @@ function ViewLectures() {
                   </div>
                 </div>
 
-                {isCompleted(selectedLecture._id) ? (
+                {isLectureCompleted(selectedLecture._id) ? (
                   <button className="vl-mark-btn done" disabled>
                     <FaCheckCircle size={14} /> Completed
                   </button>
@@ -450,7 +476,7 @@ function ViewLectures() {
               </div>
             )}
 
-            {/* Overall course progress */}
+            {/* Overall progress + Certificate */}
             <div className="vl-overall-progress">
               <div className="vl-prog-header">
                 <span>Course Progress</span>
@@ -466,13 +492,33 @@ function ViewLectures() {
               </div>
               <div className="vl-prog-track">
                 <div
-                  className="vl-prog-fill"
+                  className={`vl-prog-fill ${progressPercent === 100 ? "completed" : ""}`}
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
+
+              {/* Certificate button — sirf 100% hone par dikhega */}
+              {isCompleted && (
+                <div className="vl-certificate-bar">
+                  <div className="vl-cert-msg">
+                    <FaTrophy size={14} /> Course Completed! Congratulations 🎉
+                  </div>
+                  <button
+                    className="vl-cert-btn"
+                    onClick={() =>
+                      window.open(
+                        `${serverUrl}/api/features/certificate/${courseId}`,
+                        "_blank",
+                      )
+                    }
+                  >
+                    <FaDownload size={11} /> Download Certificate
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* ✅ NEW: DoubtSolver — AI Q&A for current lecture */}
+            {/* DoubtSolver */}
             <DoubtSolver
               courseTitle={selectedCourse?.title}
               lectureTitle={selectedLecture?.lectureTitle}
@@ -491,7 +537,7 @@ function ViewLectures() {
             <div className="vl-lecture-list">
               {selectedCourse?.lectures?.length > 0 ? (
                 selectedCourse.lectures.map((lecture, i) => {
-                  const done = isCompleted(lecture._id);
+                  const done = isLectureCompleted(lecture._id);
                   const active = selectedLecture?._id === lecture._id;
                   const state = done ? "done" : active ? "active" : "pending";
 
