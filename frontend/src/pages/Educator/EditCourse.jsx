@@ -119,7 +119,8 @@ function EditCourse() {
             <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 26, fontWeight: 800, color: "var(--text-primary)" }}>Course Details</h1>
           </div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button onClick={() => navigate(`/createlecture/${selectCourse?._id}`)} className="btn-outline" style={{ fontSize: 14 }}>Manage Lectures</button>
+            {/* BUG FIX: selectCourse?._id ki jagah courseId directly use karo */}
+            <button onClick={() => navigate(`/createlecture/${courseId}`)} className="btn-outline" style={{ fontSize: 14 }}>Manage Lectures</button>
             <button onClick={() => setIsPublished((p) => !p)} style={{ padding: "10px 18px", borderRadius: 12, border: "none", cursor: "pointer", fontSize: 14, fontWeight: 600, background: isPublished ? "rgba(255,107,107,0.12)" : "rgba(67,233,123,0.12)", color: isPublished ? "#dc2626" : "#16a34a", transition: "all 0.2s" }}>
               {isPublished ? "Unpublish" : "Publish"}
             </button>
