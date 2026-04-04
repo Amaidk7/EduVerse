@@ -12,6 +12,7 @@ import {
   FaCheckCircle,
   FaBrain,
   FaStickyNote,
+  FaMap,
 } from "react-icons/fa";
 import SmartRecommendations from "../component/SmartRecommendations";
 
@@ -113,13 +114,15 @@ function MyEnrolledCourses() {
         .ec-btn.rewatch{background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.25);}
         .ec-btn.rewatch:hover{background:rgba(34,197,94,0.18);}
 
-        /* ── NEW: Quiz + Notes action buttons ── */
-        .ec-action-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
-        .ec-action-btn{padding:9px 8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;}
+        /* ── Action buttons row: Quiz + Notes + Roadmap ── */
+        .ec-action-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;}
+        .ec-action-btn{padding:9px 6px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all 0.2s;}
         .ec-action-btn.quiz{background:rgba(251,146,60,0.12);color:#fb923c;border:1px solid rgba(251,146,60,0.25);}
         .ec-action-btn.quiz:hover{background:rgba(251,146,60,0.22);transform:translateY(-1px);}
         .ec-action-btn.notes{background:rgba(139,92,246,0.12);color:#a78bfa;border:1px solid rgba(139,92,246,0.25);}
         .ec-action-btn.notes:hover{background:rgba(139,92,246,0.22);transform:translateY(-1px);}
+        .ec-action-btn.roadmap{background:rgba(20,184,166,0.12);color:#2dd4bf;border:1px solid rgba(20,184,166,0.25);}
+        .ec-action-btn.roadmap:hover{background:rgba(20,184,166,0.22);transform:translateY(-1px);}
 
         .ec-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;color:#4b5563;text-align:center;padding:40px 20px;position:relative;z-index:1;}
         .ec-empty-icon{opacity:0.3;margin-bottom:16px;}
@@ -127,8 +130,6 @@ function MyEnrolledCourses() {
         .ec-empty p{font-size:14px;margin-bottom:24px;}
         .ec-empty-btn{background:#6366f1;color:white;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;padding:10px 24px;border:none;border-radius:12px;cursor:pointer;transition:background 0.2s;}
         .ec-empty-btn:hover{background:#4f46e5;}
-
-        /* ── SmartRecommendations section wrapper ── */
         .ec-recommendations{padding:48px 48px 0;position:relative;z-index:1;}
         @media(max-width:600px){.ec-recommendations{padding:32px 20px 0;}}
       `}</style>
@@ -287,7 +288,7 @@ function MyEnrolledCourses() {
                             : "Start Learning"}
                       </button>
 
-                      {/* ✅ NEW: Quiz + AI Notes buttons */}
+                      {/* ── Action buttons: Quiz + Notes + Roadmap ── */}
                       <div className="ec-action-row">
                         <button
                           className="ec-action-btn quiz"
@@ -296,7 +297,7 @@ function MyEnrolledCourses() {
                             navigate(`/quiz/${course._id}`);
                           }}
                         >
-                          <FaBrain size={13} /> Take Quiz
+                          <FaBrain size={12} /> Quiz
                         </button>
                         <button
                           className="ec-action-btn notes"
@@ -305,7 +306,17 @@ function MyEnrolledCourses() {
                             navigate(`/notes/${course._id}`);
                           }}
                         >
-                          <FaStickyNote size={13} /> AI Notes
+                          <FaStickyNote size={12} /> Notes
+                        </button>
+                        {/* ── NEW: Roadmap button ── */}
+                        <button
+                          className="ec-action-btn roadmap"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate("/roadmap");
+                          }}
+                        >
+                          <FaMap size={12} /> Roadmap
                         </button>
                       </div>
                     </div>
@@ -314,7 +325,7 @@ function MyEnrolledCourses() {
               })}
             </div>
 
-            {/* ✅ NEW: Smart Recommendations section */}
+            {/* Smart Recommendations */}
             <div className="ec-recommendations">
               <SmartRecommendations />
             </div>
