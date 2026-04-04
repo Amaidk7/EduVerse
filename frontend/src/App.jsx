@@ -28,14 +28,28 @@ import getAllReviews from "./customHooks/getAllReviews";
 import SearchWithAi from "./pages/SearchWithAi";
 import { ThemeProvider } from "./context/ThemeContext";
 import CursorGradient from "./component/CursorGradient";
-// ✅ Student Dashboard import
 import StudentDashboard from "./pages/StudentDashboard";
-
-// ✅ NEW IMPORTS ADDED
 import RoadmapPage from "./pages/RoadmapPage";
 import QuizPage from "./pages/QuizPage";
 import NotesPage from "./pages/NotesPage";
 import WishlistPage from "./pages/WishlistPage";
+
+// ── Route Guards ────────────────────────────────────────────
+// BUG FIX: userData null hone par redirect mat karo — loading ka wait karo
+function PrivateRoute({ children }) {
+  const { userData, loading } = useSelector((state) => state.user);
+  if (loading) return null; // ya spinner
+  return userData ? children : <Navigate to="/login" />;
+}
+
+function EducatorRoute({ children }) {
+  const { userData, loading } = useSelector((state) => state.user);
+  if (loading) return null;
+  if (!userData) return <Navigate to="/login" />;
+  if (userData.role !== "educator") return <Navigate to="/" />;
+  return children;
+}
+// ───────────────────────────────────────────────────────────
 
 function AppRoutes() {
   getCurrentUser();
@@ -62,128 +76,36 @@ function AppRoutes() {
       />
       <ScrollToTop />
       <Routes>
+        {/* Public routes */}
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/forget" element={<ForgetPassword />} />
         <Route
           path="/signup"
           element={!userData ? <SignUp /> : <Navigate to={"/"} />}
         />
-        <Route path="/login" element={<Login />} />
-        <Route
-          path="/profile"
-          element={userData ? <Profile /> : <Navigate to={"/signup"} />}
-        />
-        <Route path="/forget" element={<ForgetPassword />} />
-        <Route
-          path="/editprofile"
-          element={userData ? <EditProfile /> : <Navigate to={"/signup"} />}
-        />
-        <Route
-          path="/allcourses"
-          element={userData ? <AllCourses /> : <Navigate to={"/signup"} />}
-        />
-        <Route
-          path="/dashboard"
-          element={
-            userData?.role === "educator" ? (
-              <Dashboard />
-            ) : (
-              <Navigate to={"/signup"} />
-            )
-          }
-        />
-        {/* ✅ Student Dashboard route */}
-        <Route
-          path="/student-dashboard"
-          element={
-            userData ? <StudentDashboard /> : <Navigate to={"/signup"} />
-          }
-        />
-        <Route
-          path="/courses"
-          element={
-            userData?.role === "educator" ? (
-              <Courses />
-            ) : (
-              <Navigate to={"/signup"} />
-            )
-          }
-        />
-        <Route
-          path="/createcourse"
-          element={
-            userData?.role === "educator" ? (
-              <CreateCourses />
-            ) : (
-              <Navigate to={"/signup"} />
-            )
-          }
-        />
-        <Route
-          path="/editcourse/:courseId"
-          element={
-            userData?.role === "educator" ? (
-              <EditCourse />
-            ) : (
-              <Navigate to={"/signup"} />
-            )
-          }
-        />
-        <Route
-          path="/createlecture/:courseId"
-          element={
-            userData?.role === "educator" ? (
-              <CreateLecture />
-            ) : (
-              <Navigate to={"/signup"} />
-            )
-          }
-        />
-        <Route
-          path="/editlecture/:courseId/:lectureId"
-          element={
-            userData?.role === "educator" ? (
-              <EditLecture />
-            ) : (
-              <Navigate to={"/signup"} />
-            )
-          }
-        />
-        <Route
-          path="/viewcourse/:courseId"
-          element={userData ? <ViewCourse /> : <Navigate to={"/signup"} />}
-        />
-        <Route
-          path="/viewlecture/:courseId"
-          element={userData ? <ViewLectures /> : <Navigate to={"/signup"} />}
-        />
-        <Route
-          path="/mycourses"
-          element={
-            userData ? <MyEnrolledCourses /> : <Navigate to={"/signup"} />
-          }
-        />
-        <Route
-          path="/search"
-          element={userData ? <SearchWithAi /> : <Navigate to={"/signup"} />}
-        />
 
-        {/* ✅ NEW ROUTES ADDED */}
-        <Route
-          path="/roadmap"
-          element={userData ? <RoadmapPage /> : <Navigate to={"/signup"} />}
-        />
-        <Route
-          path="/quiz/:courseId"
-          element={userData ? <QuizPage /> : <Navigate to={"/signup"} />}
-        />
-        <Route
-          path="/notes/:courseId"
-          element={userData ? <NotesPage /> : <Navigate to={"/signup"} />}
-        />
-        <Route
-          path="/wishlist"
-          element={userData ? <WishlistPage /> : <Navigate to={"/signup"} />}
-        />
+        {/* Student routes */}
+        <Route path="/profile"        element={<PrivateRoute><Profile /></PrivateRoute>} />
+        <Route path="/editprofile"    element={<PrivateRoute><EditProfile /></PrivateRoute>} />
+        <Route path="/allcourses"     element={<PrivateRoute><AllCourses /></PrivateRoute>} />
+        <Route path="/viewcourse/:courseId" element={<PrivateRoute><ViewCourse /></PrivateRoute>} />
+        <Route path="/viewlecture/:courseId" element={<PrivateRoute><ViewLectures /></PrivateRoute>} />
+        <Route path="/mycourses"      element={<PrivateRoute><MyEnrolledCourses /></PrivateRoute>} />
+        <Route path="/search"         element={<PrivateRoute><SearchWithAi /></PrivateRoute>} />
+        <Route path="/student-dashboard" element={<PrivateRoute><StudentDashboard /></PrivateRoute>} />
+        <Route path="/roadmap"        element={<PrivateRoute><RoadmapPage /></PrivateRoute>} />
+        <Route path="/quiz/:courseId" element={<PrivateRoute><QuizPage /></PrivateRoute>} />
+        <Route path="/notes/:courseId" element={<PrivateRoute><NotesPage /></PrivateRoute>} />
+        <Route path="/wishlist"       element={<PrivateRoute><WishlistPage /></PrivateRoute>} />
+
+        {/* Educator routes */}
+        <Route path="/dashboard"      element={<EducatorRoute><Dashboard /></EducatorRoute>} />
+        <Route path="/courses"        element={<EducatorRoute><Courses /></EducatorRoute>} />
+        <Route path="/createcourse"   element={<EducatorRoute><CreateCourses /></EducatorRoute>} />
+        <Route path="/editcourse/:courseId"  element={<EducatorRoute><EditCourse /></EducatorRoute>} />
+        <Route path="/createlecture/:courseId" element={<EducatorRoute><CreateLecture /></EducatorRoute>} />
+        <Route path="/editlecture/:courseId/:lectureId" element={<EducatorRoute><EditLecture /></EducatorRoute>} />
       </Routes>
     </>
   );
