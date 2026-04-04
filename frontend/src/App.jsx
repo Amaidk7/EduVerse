@@ -91,7 +91,7 @@ function AppRoutes() {
         <Route path="/allcourses"     element={<PrivateRoute><AllCourses /></PrivateRoute>} />
         <Route path="/viewcourse/:courseId" element={<PrivateRoute><ViewCourse /></PrivateRoute>} />
         <Route path="/viewlecture/:courseId" element={<PrivateRoute><ViewLectures /></PrivateRoute>} />
-        <Route path="/mycourses"      element={<PrivateRoute><MyEnrolledCourses /></PrivateRoute>} />
+        <Route path="/mycourses" element={<PrivateRoute>{userData?.role === "educator" ? <Navigate to="/courses" /> : <MyEnrolledCourses />}</PrivateRoute>} />
         <Route path="/search"         element={<PrivateRoute><SearchWithAi /></PrivateRoute>} />
         <Route path="/student-dashboard" element={<PrivateRoute><StudentDashboard /></PrivateRoute>} />
         <Route path="/roadmap"        element={<PrivateRoute><RoadmapPage /></PrivateRoute>} />
