@@ -17,6 +17,8 @@ function Nav() {
   const [showMobile, setShowMobile] = useState(false);
   const dropdownRef = useRef(null);
 
+  const isEducator = userData?.role === "educator";
+
   useEffect(() => {
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -119,7 +121,7 @@ function Nav() {
               {link.label}
             </button>
           ))}
-          {userData?.role === "educator" && (
+          {isEducator && (
             <button
               onClick={() => navigate("/dashboard")}
               style={{
@@ -238,32 +240,36 @@ function Nav() {
                     👤 My Profile
                   </div>
 
-                  {/* My Courses */}
+                  {/* My Courses — educator ke liye /courses, student ke liye /mycourses */}
                   <div
                     className="dropdown-item"
                     onClick={() => {
-                      navigate(userData?.role === "educator" ? "/courses" : "/mycourses");
+                      navigate(isEducator ? "/courses" : "/mycourses");
                       setShowDropdown(false);
                     }}
                   >
                     📚 My Courses
                   </div>
 
-                  {/* ── NEW: My Wishlist ── */}
-                  <div
-                    className="dropdown-item"
-                    onClick={() => { navigate("/wishlist"); setShowDropdown(false); }}
-                  >
-                    ♡ My Wishlist
-                  </div>
+                  {/* Wishlist — sirf student ke liye */}
+                  {!isEducator && (
+                    <div
+                      className="dropdown-item"
+                      onClick={() => { navigate("/wishlist"); setShowDropdown(false); }}
+                    >
+                      ♡ My Wishlist
+                    </div>
+                  )}
 
-                  {/* ── NEW: Learning Roadmap ── */}
-                  <div
-                    className="dropdown-item"
-                    onClick={() => { navigate("/roadmap"); setShowDropdown(false); }}
-                  >
-                    🗺 Learning Roadmap
-                  </div>
+                  {/* Learning Roadmap — sirf student ke liye */}
+                  {!isEducator && (
+                    <div
+                      className="dropdown-item"
+                      onClick={() => { navigate("/roadmap"); setShowDropdown(false); }}
+                    >
+                      🗺 Learning Roadmap
+                    </div>
+                  )}
 
                   {/* Log Out */}
                   <div
@@ -362,7 +368,7 @@ function Nav() {
               </button>
             ))}
 
-            {userData?.role === "educator" && (
+            {isEducator && (
               <button
                 onClick={() => { navigate("/dashboard"); setShowMobile(false); }}
                 style={mobileLinkStyle}
@@ -382,29 +388,33 @@ function Nav() {
 
                 <button
                   onClick={() => {
-                    navigate(userData?.role === "educator" ? "/courses" : "/mycourses");
+                    navigate(isEducator ? "/courses" : "/mycourses");
                     setShowMobile(false);
                   }}
                   style={mobileLinkStyle}
                 >
-                  📚 {userData?.role === "educator" ? "Educator Dashboard" : "My Courses"}
+                  📚 My Courses
                 </button>
 
-                {/* ── NEW: Wishlist (mobile) ── */}
-                <button
-                  onClick={() => { navigate("/wishlist"); setShowMobile(false); }}
-                  style={mobileLinkStyle}
-                >
-                  ♡ My Wishlist
-                </button>
+                {/* Wishlist — sirf student ke liye */}
+                {!isEducator && (
+                  <button
+                    onClick={() => { navigate("/wishlist"); setShowMobile(false); }}
+                    style={mobileLinkStyle}
+                  >
+                    ♡ My Wishlist
+                  </button>
+                )}
 
-                {/* ── NEW: Roadmap (mobile) ── */}
-                <button
-                  onClick={() => { navigate("/roadmap"); setShowMobile(false); }}
-                  style={mobileLinkStyle}
-                >
-                  🗺 Learning Roadmap
-                </button>
+                {/* Roadmap — sirf student ke liye */}
+                {!isEducator && (
+                  <button
+                    onClick={() => { navigate("/roadmap"); setShowMobile(false); }}
+                    style={mobileLinkStyle}
+                  >
+                    🗺 Learning Roadmap
+                  </button>
+                )}
               </>
             )}
 

@@ -6,10 +6,16 @@ import { FaEnvelope, FaUserGraduate, FaBookOpen, FaPen } from "react-icons/fa6";
 
 function Profile() {
   const { userData } = useSelector((state) => state.user);
+  const { creatorCourseData } = useSelector((state) => state.course);
   const navigate = useNavigate();
+
   const avatarChar = userData?.name?.slice(0, 1).toUpperCase();
-  const enrolledCount = userData?.enrolledCourses?.length ?? 0;
   const isEducator = userData?.role === "educator";
+
+  // Educator ke liye created courses, student ke liye enrolled courses
+  const enrolledCount = userData?.enrolledCourses?.length ?? 0;
+  const createdCount = creatorCourseData?.length ?? 0;
+  const courseCount = isEducator ? createdCount : enrolledCount;
 
   return (
     <>
@@ -42,7 +48,6 @@ function Profile() {
           to   { opacity:1; transform: translateY(0); }
         }
 
-        /* ── HEADER ── */
         .profile-header {
           position: relative;
           height: 130px;
@@ -57,7 +62,6 @@ function Profile() {
           background: radial-gradient(ellipse at 70% 50%, rgba(99,102,241,0.35) 0%, transparent 70%);
         }
 
-        /* decorative circles */
         .profile-header::after {
           content: '';
           position: absolute;
@@ -100,7 +104,6 @@ function Profile() {
         }
         .back-btn:hover { background: rgba(255,255,255,0.2); }
 
-        /* role badge in header */
         .role-pill {
           position: absolute;
           top: 16px;
@@ -117,7 +120,6 @@ function Profile() {
           border-radius: 20px;
         }
 
-        /* ── AVATAR OVERLAP ZONE ── */
         .avatar-zone {
           display: flex;
           flex-direction: column;
@@ -125,7 +127,7 @@ function Profile() {
           margin-top: -52px;
           position: relative;
           z-index: 3;
-          padding: 0 28px;
+          padding: 0 28px 28px;
         }
 
         .avatar-ring {
@@ -162,7 +164,6 @@ function Profile() {
           object-fit: cover;
         }
 
-        /* edit avatar button */
         .avatar-edit {
           position: absolute;
           top: 0;
@@ -194,7 +195,6 @@ function Profile() {
           text-align: center;
         }
 
-        /* ── STATS ROW ── */
         .stats-row {
           display: grid;
           grid-template-columns: 1fr 1fr 1fr;
@@ -228,7 +228,6 @@ function Profile() {
           letter-spacing: 0.06em;
         }
 
-        /* ── INFO ROWS ── */
         .info-list {
           display: flex;
           flex-direction: column;
@@ -276,7 +275,6 @@ function Profile() {
           word-break: break-word;
         }
 
-        /* ── BUTTONS ── */
         .btn-row {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -347,12 +345,21 @@ function Profile() {
             {/* ── STATS ── */}
             <div className="stats-row">
               <div className="stat-cell">
-                <div className="stat-val">{enrolledCount}</div>
-                <div className="stat-label">Courses</div>
+                <div className="stat-val">{courseCount}</div>
+                <div className="stat-label">
+                  {isEducator ? "Created" : "Enrolled"}
+                </div>
               </div>
               <div className="stat-cell">
-                <div className="stat-val">{isEducator ? "∞" : "0"}</div>
-                <div className="stat-label">{isEducator ? "Created" : "Completed"}</div>
+                <div className="stat-val">
+                  {isEducator
+                    ? (creatorCourseData?.filter(c => c.isPublished).length ?? 0)
+                    : 0
+                  }
+                </div>
+                <div className="stat-label">
+                  {isEducator ? "Published" : "Completed"}
+                </div>
               </div>
               <div className="stat-cell">
                 <div className="stat-val">
@@ -378,20 +385,34 @@ function Profile() {
                 <div className="info-icon"><FaUserGraduate size={14} /></div>
                 <div>
                   <div className="info-label">Bio</div>
-                  <div className="info-value" style={{ color: userData?.description ? "#e5e7eb" : "#4b5563", fontStyle: userData?.description ? "normal" : "italic" }}>
+                  <div
+                    className="info-value"
+                    style={{
+                      color: userData?.description ? "#e5e7eb" : "#4b5563",
+                      fontStyle: userData?.description ? "normal" : "italic"
+                    }}
+                  >
                     {userData?.description || "No bio added yet"}
                   </div>
                 </div>
               </div>
 
+              {/* Educator ke liye "Created Courses", Student ke liye "Enrolled Courses" */}
               <div className="info-row">
                 <div className="info-icon"><FaBookOpen size={14} /></div>
                 <div>
-                  <div className="info-label">Enrolled Courses</div>
+                  <div className="info-label">
+                    {isEducator ? "Created Courses" : "Enrolled Courses"}
+                  </div>
                   <div className="info-value">
-                    {enrolledCount === 0
-                      ? "No courses yet"
-                      : `${enrolledCount} ${enrolledCount === 1 ? "course" : "courses"} enrolled`}
+                    {isEducator
+                      ? (courseCount === 0
+                          ? "No courses created yet"
+                          : `${courseCount} ${courseCount === 1 ? "course" : "courses"} created`)
+                      : (enrolledCount === 0
+                          ? "No courses yet"
+                          : `${enrolledCount} ${enrolledCount === 1 ? "course" : "courses"} enrolled`)
+                    }
                   </div>
                 </div>
               </div>
@@ -399,10 +420,17 @@ function Profile() {
 
             {/* ── BUTTONS ── */}
             <div className="btn-row">
-              <button className="btn btn-ghost" onClick={() => navigate("/mycourses")}>
+              {/* Educator ke liye /courses, Student ke liye /mycourses */}
+              <button
+                className="btn btn-ghost"
+                onClick={() => navigate(isEducator ? "/courses" : "/mycourses")}
+              >
                 My Courses
               </button>
-              <button className="btn btn-indigo" onClick={() => navigate("/editprofile")}>
+              <button
+                className="btn btn-indigo"
+                onClick={() => navigate("/editprofile")}
+              >
                 Edit Profile
               </button>
             </div>
