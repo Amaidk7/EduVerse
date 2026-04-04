@@ -1,99 +1,229 @@
 import axios from 'axios';
 import React, { useState } from 'react'
-import { FaArrowLeftLong } from "react-icons/fa6";
+import { FaArrowLeftLong, FaTrash, FaVideo } from "react-icons/fa6";
+import { FaCheckCircle } from "react-icons/fa";
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { serverUrl } from '../../App';
 import { setLectureData } from '../../redux/lectureSlice';
 import { toast } from 'react-toastify';
 import { ClipLoader } from 'react-spinners';
+
 function EditLecture() {
-    const {courseId , lectureId} = useParams()
-    const {lectureData} = useSelector(state=>state.lecture)
+    const { courseId, lectureId } = useParams()
+    const { lectureData } = useSelector(state => state.lecture)
     const selectedLecture = lectureData.find(lecture => lecture._id === lectureId)
     const navigate = useNavigate()
-    const [lectureTitle , setLectureTitle] = useState(selectedLecture?.lectureTitle)
-    const [videoUrl,setVideoUrl] = useState("")
-    const [isPreviewFree,setIsPreviewFree] = useState(false)
-    const [loading,setLoading] = useState(false)
-    const [loading1,setLoading1] = useState(false)
     const dispatch = useDispatch()
-    const formdata = new FormData()
-    formdata.append("lectureTitle",lectureTitle)
-    formdata.append("videoUrl",videoUrl)
-    formdata.append("isPreviewFree",isPreviewFree)
+
+    const [lectureTitle, setLectureTitle] = useState(selectedLecture?.lectureTitle || "")
+    const [videoUrl, setVideoUrl] = useState("")
+    const [isPreviewFree, setIsPreviewFree] = useState(selectedLecture?.isPreviewFree || false)
+    const [loading, setLoading] = useState(false)
+    const [loading1, setLoading1] = useState(false)
+    const [videoName, setVideoName] = useState("")
+
+    const handleVideoChange = (e) => {
+        const file = e.target.files[0]
+        if (file) {
+            setVideoUrl(file)
+            setVideoName(file.name)
+        }
+    }
 
     const handleEditLecture = async () => {
         setLoading(true)
         try {
-            const result = await axios.post(serverUrl + `/api/course/editlecture/${lectureId}` , formdata , {withCredentials:true})
-            console.log(result.data)
-            dispatch(setLectureData([...lectureData , result.data]))
+            const formdata = new FormData()
+            formdata.append("lectureTitle", lectureTitle)
+            formdata.append("videoUrl", videoUrl)
+            formdata.append("isPreviewFree", isPreviewFree)
+
+            const result = await axios.post(
+                serverUrl + `/api/course/editlecture/${lectureId}`,
+                formdata,
+                { withCredentials: true }
+            )
+            dispatch(setLectureData([...lectureData, result.data]))
             toast.success("Lecture Updated")
-            navigate("/courses")
-            setLoading(false)
+            navigate(`/createlecture/${courseId}`)
         } catch (error) {
-             console.log(error)
-             toast.error(error.response.data.message)
-             setLoading(false)
+            toast.error(error.response?.data?.message || "Failed to update")
+        } finally {
+            setLoading(false)
         }
     }
+
     const removeLecture = async () => {
         setLoading1(true)
         try {
-            const result = await axios.delete(serverUrl + `/api/course/removelecture/${lectureId}` , {withCredentials:true})
-            console.log(result.data)
-             setLoading1(false)
-            navigate(`/createLecture/${courseId}`)
+            await axios.delete(serverUrl + `/api/course/removelecture/${lectureId}`, { withCredentials: true })
             toast.success("Lecture Removed")
-           
+            navigate(`/createlecture/${courseId}`)
         } catch (error) {
-             setLoading1(false)
-             console.log(error)
-             toast.error(error.response.data.message)
+            toast.error(error.response?.data?.message || "Failed to remove")
+        } finally {
+            setLoading1(false)
         }
     }
-  return (
-    <div className='min-h-screen bg-gray-100 flex items-center justify-center p-4'>
-        <div className='w-full max-w-xl bg-white rounded-xl shadow-lg p-6 space-y-6'>
 
-            {/* header */}
-            <div className='flex items-center gap-2 mb-2'>
-                <FaArrowLeftLong className='text-gray-600 cursor-pointer' onClick={()=>navigate(`/createlecture/${courseId}`)}/>
-                <h2 className='text-xl font-semibold text-gray-800'>Update Course Lecture</h2>
-            </div>
+    return (
+        <div style={{ minHeight: "100vh", background: "var(--bg-primary)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+            <div className="animate-scale-in" style={{ width: "100%", maxWidth: 560, background: "var(--bg-card)", borderRadius: 24, border: "1px solid var(--border)", boxShadow: "var(--shadow-hover)", padding: "40px 36px" }}>
 
-            <button className='"mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-all text-sm' disabled={loading1} onClick={removeLecture}>{loading1? <ClipLoader size={30} color='white'/>:"Remove Lecture"}</button>
-
-
-            <div className='space-y-4'>
-                <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-1' htmlFor="">LectureTitle *</label>
-                    <input type="text" className='w-full p-3 border border-gray-300 rounded-md text-sm focus:ring-2  focus:ring-[black]focus:outline-none' required onChange={(e)=>setLectureTitle(e.target.value)} value={lectureTitle}/>
+                {/* Header */}
+                <div style={{ marginBottom: 28 }}>
+                    <button
+                        onClick={() => navigate(`/createlecture/${courseId}`)}
+                        style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)", fontSize: 14, marginBottom: 16, padding: 0 }}
+                    >
+                        <FaArrowLeftLong /> Back to Lectures
+                    </button>
+                    <div className="section-label" style={{ marginBottom: 6 }}>Lecture Settings</div>
+                    <h1 style={{ fontFamily: "Syne, sans-serif", fontSize: 24, fontWeight: 800, color: "var(--text-primary)" }}>
+                        Edit Lecture
+                    </h1>
                 </div>
 
-                <div>
-             <label className='block text-sm font-medium text-gray-700 mb-1' htmlFor="">Video *</label>
-                    <input type="file" className='w-full border border-gray-300 rounded-md p-2 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-gray-700 file:text-[white] hover:file:bg-gray-500' required 
-                    accept='video/*' onChange={(e)=>setVideoUrl(e.target.files[0])} />
+                {/* Form */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+                    {/* Lecture Title */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)" }}>
+                            Lecture Title
+                        </label>
+                        <input
+                            className="ev-input"
+                            type="text"
+                            placeholder="e.g. Introduction to React Hooks"
+                            value={lectureTitle}
+                            onChange={(e) => setLectureTitle(e.target.value)}
+                        />
+                    </div>
+
+                    {/* Video Upload */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)" }}>
+                            Upload Video
+                        </label>
+                        <label
+                            htmlFor="video-upload"
+                            style={{
+                                display: "flex", alignItems: "center", gap: 12,
+                                padding: "14px 18px", borderRadius: 12,
+                                border: `2px dashed ${videoName ? "var(--accent)" : "var(--border-hover)"}`,
+                                background: videoName ? "rgba(108,99,255,0.04)" : "var(--bg-secondary)",
+                                cursor: "pointer", transition: "all 0.2s"
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.borderColor = "var(--accent)"}
+                            onMouseLeave={e => e.currentTarget.style.borderColor = videoName ? "var(--accent)" : "var(--border-hover)"}
+                        >
+                            {videoName ? (
+                                <FaCheckCircle size={18} color="#16a34a" />
+                            ) : (
+                                <FaVideo size={18} color="var(--text-muted)" />
+                            )}
+                            <div>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: videoName ? "var(--accent)" : "var(--text-secondary)" }}>
+                                    {videoName || "Choose video file"}
+                                </div>
+                                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
+                                    {videoName ? "File selected ✓" : "MP4, MOV, AVI supported"}
+                                </div>
+                            </div>
+                        </label>
+                        <input
+                            id="video-upload"
+                            type="file"
+                            accept="video/*"
+                            style={{ display: "none" }}
+                            onChange={handleVideoChange}
+                        />
+                    </div>
+
+                    {/* Free Preview Toggle */}
+                    <label
+                        htmlFor="isFree"
+                        style={{
+                            display: "flex", alignItems: "center", gap: 12,
+                            padding: "14px 18px", borderRadius: 12,
+                            border: `1px solid ${isPreviewFree ? "var(--accent)" : "var(--border)"}`,
+                            background: isPreviewFree ? "rgba(108,99,255,0.06)" : "var(--bg-secondary)",
+                            cursor: "pointer", transition: "all 0.2s"
+                        }}
+                    >
+                        <div style={{
+                            width: 20, height: 20, borderRadius: 6,
+                            border: `2px solid ${isPreviewFree ? "var(--accent)" : "var(--border-hover)"}`,
+                            background: isPreviewFree ? "var(--accent)" : "transparent",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            transition: "all 0.2s", flexShrink: 0
+                        }}>
+                            {isPreviewFree && <span style={{ color: "white", fontSize: 11, fontWeight: 700 }}>✓</span>}
+                        </div>
+                        <input
+                            type="checkbox"
+                            id="isFree"
+                            checked={isPreviewFree}
+                            onChange={() => setIsPreviewFree(prev => !prev)}
+                            style={{ display: "none" }}
+                        />
+                        <div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
+                                Free Preview
+                            </div>
+                            <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
+                                Students can watch this lecture before enrolling
+                            </div>
+                        </div>
+                    </label>
+
+                    {/* Uploading state */}
+                    {loading && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: "rgba(108,99,255,0.06)", borderRadius: 10, border: "1px solid rgba(108,99,255,0.2)" }}>
+                            <ClipLoader size={16} color="var(--accent)" />
+                            <span style={{ fontSize: 13, color: "var(--accent)", fontWeight: 500 }}>
+                                Uploading video... Please wait
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Update Button */}
+                    <button
+                        className="btn-primary"
+                        style={{ justifyContent: "center", height: 48, fontSize: 15 }}
+                        disabled={loading}
+                        onClick={handleEditLecture}
+                    >
+                        {loading ? <ClipLoader size={20} color="var(--bg-primary)" /> : "Update Lecture"}
+                    </button>
+
+                    {/* Danger Zone */}
+                    <div style={{ borderTop: "1px solid var(--border)", paddingTop: 20 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "#ef4444", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>
+                            Danger Zone
+                        </div>
+                        <button
+                            onClick={removeLecture}
+                            disabled={loading1}
+                            style={{
+                                background: "#fef2f2", border: "1px solid #fecaca",
+                                color: "#ef4444", borderRadius: 12, padding: "11px 20px",
+                                cursor: "pointer", fontWeight: 600, fontSize: 14,
+                                display: "inline-flex", alignItems: "center", gap: 8,
+                                transition: "all 0.2s"
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = "#fee2e2"}
+                            onMouseLeave={e => e.currentTarget.style.background = "#fef2f2"}
+                        >
+                            {loading1 ? <ClipLoader size={16} color="#ef4444" /> : <><FaTrash size={13} /> Remove Lecture</>}
+                        </button>
+                    </div>
                 </div>
-
-               <div className='flex items-center gap-3'>
-                <input type="checkbox" className='accent-[black] h-4 w-4' id='isFree' onChange={()=>setIsPreviewFree(prev=>!prev)} />
-                <label htmlFor="isFree" className='text-sm text-gray-700'>Is this Video FREE </label>
-               </div>
-
-             {loading ? <p>Uploading video... Please wait.</p> : ""}
-
-            </div>
-
-            <div className='pt-4'>
-                <button className='w-full bg-black text-white py-3 rounded-md text-sm font-medium hover:bg-gray-700 transition' disabled={loading} onClick={handleEditLecture}>{loading? <ClipLoader size={30} color='white'/>:"Update Lecture"}</button>
             </div>
         </div>
-      
-    </div>
-  )
+    )
 }
 
 export default EditLecture
