@@ -1,44 +1,72 @@
-import express from "express";
+// ── dotenv SABSE PEHLE ───────────────────────────────────────────────────────
 import dotenv from "dotenv";
-import connectDb from "./config/connectDB.js";
-import cookieParser from "cookie-parser";
-import authRouter from "./route/authRoute.js";
 dotenv.config();
+
+import express from "express";
 import cors from "cors";
-import userRouter from "./route/userRoute.js";
-import courseRouter from "./route/courseRoute.js";
-import paymentRouter from "./route/paymentRoute.js";
-import reviewRouter from "./route/reviewRoute.js";
-import aiRouter from "./route/aiRoute.js";
+import cookieParser from "cookie-parser";
+import connectDb from "./config/connectDB.js";
+
+import authRouter     from "./route/authRoute.js";
+import userRouter     from "./route/userRoute.js";
+import courseRouter   from "./route/courseRoute.js";
+import paymentRouter  from "./route/paymentRoute.js";
+import reviewRouter   from "./route/reviewRoute.js";
+import aiRouter       from "./route/aiRoute.js";
 import featuresRouter from "./route/featuresRoute.js";
 
-const port = process.env.PORT;
-const app = express();
-app.use(cookieParser());
-app.use(express.json());
-app.use(cors({
-  origin: [
-    "https://eduverse-1-cxg7.onrender.com",
-    "http://localhost:5173",
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-}));
+const port = process.env.PORT || 4000;
+const app  = express();
 
-app.use("/api/auth", authRouter);
-app.use("/api/user", userRouter);
-app.use("/api/course", courseRouter);
-app.use("/api/order", paymentRouter);
-app.use("/api/review", reviewRouter);
-app.use("/api/ai", aiRouter);
+// ── 1. CORS ──────────────────────────────────────────────────────────────────
+const allowedOrigins = [
+  "https://eduverse-1-cxg7.onrender.com",     // production frontend
+  "https://eduverse-bgfe-yti0.onrender.com",  // production backend
+  "http://localhost:5173",                     // local vite
+  "http://localhost:3000",                     // local fallback
+];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS blocked: ${origin}`));
+  },
+  methods:          ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  allowedHeaders:   ["Content-Type", "Authorization", "Cookie"],
+  credentials:      true,
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+
+// ── 2. Body parsers ──────────────────────────────────────────────────────────
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// ── 3. Routes ────────────────────────────────────────────────────────────────
+app.use("/api/auth",     authRouter);
+app.use("/api/user",     userRouter);
+app.use("/api/course",   courseRouter);
+app.use("/api/order",    paymentRouter);
+app.use("/api/review",   reviewRouter);
+app.use("/api/ai",       aiRouter);
 app.use("/api/features", featuresRouter);
 
+// ── 4. Health check ──────────────────────────────────────────────────────────
 app.get("/", (req, res) => {
-  res.send("Hello from Server");
+  res.json({ status: "ok", message: "EduVerse API is running" });
 });
 
-app.listen(port, () => {
-  console.log("Server Started");
-  connectDb();
+// ── 5. Global error handler ──────────────────────────────────────────────────
+app.use((err, req, res, next) => {
+  console.error("Global error:", err.message);
+  res.status(500).json({ message: err.message || "Internal server error" });
+});
+
+// ── 6. Start + DB ────────────────────────────────────────────────────────────
+app.listen(port, async () => {
+  console.log(`Server is running on port ${port}`);
+  await connectDb();
 });

@@ -81,10 +81,11 @@ export const sendOTP = async (req,res) => {
         if(!user){
              return res.status(404).json({message:"User not found"})
         }
-        const otp = Math.floor(1000 + Math.random()* 9000).toString()
+        // ── FIXED: 6 digit OTP (pehle 4 digit tha — brute-forceable) ──
+        const otp = Math.floor(100000 + Math.random() * 900000).toString()
         
-        user.resetOtp = otp,
-        user.otpExpires = Date.now() + 5 * 60 *1000,
+        user.resetOtp = otp
+        user.otpExpires = Date.now() + 5 * 60 * 1000
         user.isOtpVerifed = false
 
         await user.save()
@@ -99,23 +100,21 @@ export const sendOTP = async (req,res) => {
 export const verifyOTP = async (req,res) => {
     try {
         const {email,otp} = req.body
-         const user = await User.findOne({email})
-        if(!user || user.resetOtp != otp || user.otpExpires < Date.now() ){
+        const user = await User.findOne({email})
+        if(!user || user.resetOtp != otp || user.otpExpires < Date.now()){
              return res.status(404).json({message:"Invalid OTP"})
         }
-        user.isOtpVerifed = true,
-        user.resetOtp = undefined,
+        user.isOtpVerifed = true
+        user.resetOtp = undefined
         user.otpExpires = undefined
 
         await user.save()
-
-         return res.status(200).json({message:"Otp Verified Successfully"})
+        return res.status(200).json({message:"Otp Verified Successfully"})
 
     } catch (error) {
          return res.status(500).json({message:`verify Otp error ${error}`})
     }
 }
-
 
 export const resetPassword = async (req,res) => {
     try {
@@ -125,39 +124,46 @@ export const resetPassword = async (req,res) => {
              return res.status(404).json({message:"OTP verification is required"})
         }
         const hashPassword = await bcrypt.hash(password,10)
-        user.password = hashPassword,
+        user.password = hashPassword
         user.isOtpVerifed = false
 
         await user.save()
-         return res.status(200).json({message:"Reset Password Successfully"})
+        return res.status(200).json({message:"Reset Password Successfully"})
 
     } catch (error) {
         return res.status(500).json({message:`reset password error ${error}`})
     }
 }
 
-
 export const googleAuth = async (req,res) => {
     try {
-        const {name , email , role} = req.body
-        const user = await User.findOne({email})
+        const {name, email, role} = req.body
+
+        // ── BUG FIX: const → let (pehle const tha, reassign crash karta tha)
+        // ── Iska matlab: naye Google users signup nahi kar pa rahe the
+        let user = await User.findOne({email})
+
         if(!user){
+            // New Google user — create karo
+            // role frontend se aata hai (student/educator)
+            // default "student" agar missing ho
             user = await User.create({
                 name,
                 email,
-                role
+                role: role || "student"
             })
         }
+
         let token = await genToken(user._id)
-        res.cookie("token",token , {
-            httpOnly:true,
-            secure:true,
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure:   true,
             sameSite: "none",
-            maxAge: 7 * 24 * 60 * 60 * 1000
+            maxAge:   7 * 24 * 60 * 60 * 1000
         })
-       return res.status(200).json(user)
+        return res.status(200).json(user)
 
     } catch (error) {
-          return res.status(500).json({message:`GoogleAuth error ${error}`})
+        return res.status(500).json({message:`GoogleAuth error ${error}`})
     }
 }
