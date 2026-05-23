@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import { FaEnvelope, FaUserGraduate, FaBookOpen, FaPen } from "react-icons/fa6";
+import axios from "axios";
+import { serverUrl } from "../App";
 
 function Profile() {
   const { userData } = useSelector((state) => state.user);
@@ -12,10 +14,41 @@ function Profile() {
   const avatarChar = userData?.name?.slice(0, 1).toUpperCase();
   const isEducator = userData?.role === "educator";
 
-  // Educator ke liye created courses, student ke liye enrolled courses
   const enrolledCount = userData?.enrolledCourses?.length ?? 0;
   const createdCount = creatorCourseData?.length ?? 0;
   const courseCount = isEducator ? createdCount : enrolledCount;
+
+  // BUG FIX: Progress API se completed count fetch karo
+  const [completedCount, setCompletedCount] = useState(0);
+
+  useEffect(() => {
+    if (isEducator || !userData?.enrolledCourses?.length) return;
+
+    const fetchAllProgress = async () => {
+      try {
+        let completed = 0;
+        const promises = userData.enrolledCourses.map(async (enrolled) => {
+          const courseId =
+            typeof enrolled === "string" ? enrolled : enrolled?._id?.toString();
+          try {
+            const { data } = await axios.get(
+              serverUrl + `/api/features/progress/${courseId}`,
+              { withCredentials: true }
+            );
+            if (data.isCompleted) completed++;
+          } catch (e) {
+            // Is course ka progress nahi mila — ignore
+          }
+        });
+        await Promise.all(promises);
+        setCompletedCount(completed);
+      } catch (e) {
+        console.error("Failed to fetch progress:", e);
+      }
+    };
+
+    fetchAllProgress();
+  }, [userData?.enrolledCourses, isEducator]);
 
   return (
     <>
@@ -354,7 +387,7 @@ function Profile() {
                 <div className="stat-val">
                   {isEducator
                     ? (creatorCourseData?.filter(c => c.isPublished).length ?? 0)
-                    : 0
+                    : completedCount
                   }
                 </div>
                 <div className="stat-label">
@@ -397,7 +430,6 @@ function Profile() {
                 </div>
               </div>
 
-              {/* Educator ke liye "Created Courses", Student ke liye "Enrolled Courses" */}
               <div className="info-row">
                 <div className="info-icon"><FaBookOpen size={14} /></div>
                 <div>
@@ -420,7 +452,6 @@ function Profile() {
 
             {/* ── BUTTONS ── */}
             <div className="btn-row">
-              {/* Educator ke liye /courses, Student ke liye /mycourses */}
               <button
                 className="btn btn-ghost"
                 onClick={() => navigate(isEducator ? "/courses" : "/mycourses")}

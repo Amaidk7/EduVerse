@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -22,7 +22,12 @@ function MyEnrolledCourses() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // Page khulte hi fresh user data fetch karo taaki progress latest rahe
+  // BUG FIX: Progress API se har course ka progress fetch karo
+  // userData.courseProgress pe depend nahi karna — directly API call karo
+  const [progressMap, setProgressMap] = useState({});
+  const [progressLoading, setProgressLoading] = useState(true);
+
+  // Page khulte hi fresh user data fetch karo
   useEffect(() => {
     const refreshUser = async () => {
       try {
@@ -38,7 +43,7 @@ function MyEnrolledCourses() {
     refreshUser();
   }, [dispatch]);
 
-  // Match enrolled IDs → full course objects from courseData (already in Redux)
+  // Match enrolled IDs → full course objects from courseData
   const enrolledCourses = useMemo(() => {
     if (!userData?.enrolledCourses?.length || !courseData?.length) return [];
     return userData.enrolledCourses
@@ -50,21 +55,44 @@ function MyEnrolledCourses() {
       .filter(Boolean);
   }, [userData?.enrolledCourses, courseData]);
 
-  // Get real progress % from userData.courseProgress
-  const getProgress = (courseId) => {
-    if (!userData?.courseProgress?.length)
-      return { percent: 0, completed: 0, done: false };
-    const entry = userData.courseProgress.find((p) => {
-      const pid =
-        typeof p.course === "string" ? p.course : p.course?._id?.toString();
-      return pid === courseId?.toString();
-    });
-    if (!entry) return { percent: 0, completed: 0, done: false };
-    return {
-      percent: entry.progressPercent ?? 0,
-      completed: entry.completedLectures?.length ?? 0,
-      done: (entry.progressPercent ?? 0) === 100,
+  // BUG FIX: Har enrolled course ka progress /api/features/progress/:courseId se fetch karo
+  useEffect(() => {
+    if (!enrolledCourses.length) {
+      setProgressLoading(false);
+      return;
+    }
+
+    const fetchAllProgress = async () => {
+      setProgressLoading(true);
+      const map = {};
+      await Promise.all(
+        enrolledCourses.map(async (course) => {
+          try {
+            const { data } = await axios.get(
+              serverUrl + `/api/features/progress/${course._id}`,
+              { withCredentials: true },
+            );
+            map[course._id] = {
+              percent: data.percentage ?? 0,
+              completed: data.completedCount ?? 0,
+              done: data.isCompleted ?? false,
+            };
+          } catch (e) {
+            // Course ka koi progress nahi abhi tak
+            map[course._id] = { percent: 0, completed: 0, done: false };
+          }
+        }),
+      );
+      setProgressMap(map);
+      setProgressLoading(false);
     };
+
+    fetchAllProgress();
+  }, [enrolledCourses.length]);
+
+  // progressMap se progress lo, fallback 0
+  const getProgress = (courseId) => {
+    return progressMap[courseId] ?? { percent: 0, completed: 0, done: false };
   };
 
   const isEmpty = enrolledCourses.length === 0;
@@ -113,8 +141,6 @@ function MyEnrolledCourses() {
         .ec-btn.resume:hover{background:#1e3a8a;}
         .ec-btn.rewatch{background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.25);}
         .ec-btn.rewatch:hover{background:rgba(34,197,94,0.18);}
-
-        /* ── Action buttons row: Quiz + Notes + Roadmap ── */
         .ec-action-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;}
         .ec-action-btn{padding:9px 6px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all 0.2s;}
         .ec-action-btn.quiz{background:rgba(251,146,60,0.12);color:#fb923c;border:1px solid rgba(251,146,60,0.25);}
@@ -123,7 +149,6 @@ function MyEnrolledCourses() {
         .ec-action-btn.notes:hover{background:rgba(139,92,246,0.22);transform:translateY(-1px);}
         .ec-action-btn.roadmap{background:rgba(20,184,166,0.12);color:#2dd4bf;border:1px solid rgba(20,184,166,0.25);}
         .ec-action-btn.roadmap:hover{background:rgba(20,184,166,0.22);transform:translateY(-1px);}
-
         .ec-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;color:#4b5563;text-align:center;padding:40px 20px;position:relative;z-index:1;}
         .ec-empty-icon{opacity:0.3;margin-bottom:16px;}
         .ec-empty h3{font-family:'Syne',sans-serif;font-size:20px;color:#6b7280;margin-bottom:8px;}
@@ -249,11 +274,13 @@ function MyEnrolledCourses() {
                       <div className="ec-prog-wrap">
                         <div className="ec-prog-label">
                           <span>
-                            {done
-                              ? "🎉 Completed!"
-                              : percent > 0
-                                ? `${completed} lecture${completed !== 1 ? "s" : ""} done`
-                                : "Not started"}
+                            {progressLoading
+                              ? "Loading..."
+                              : done
+                                ? "🎉 Completed!"
+                                : percent > 0
+                                  ? `${completed} lecture${completed !== 1 ? "s" : ""} done`
+                                  : "Not started"}
                           </span>
                           <span
                             style={{
@@ -261,13 +288,13 @@ function MyEnrolledCourses() {
                               fontWeight: 600,
                             }}
                           >
-                            {percent}%
+                            {progressLoading ? "—" : `${percent}%`}
                           </span>
                         </div>
                         <div className="ec-prog-track">
                           <div
                             className={`ec-prog-fill ${done ? "green" : "indigo"}`}
-                            style={{ width: `${percent}%` }}
+                            style={{ width: progressLoading ? "0%" : `${percent}%` }}
                           />
                         </div>
                       </div>
@@ -288,7 +315,7 @@ function MyEnrolledCourses() {
                             : "Start Learning"}
                       </button>
 
-                      {/* ── Action buttons: Quiz + Notes + Roadmap ── */}
+                      {/* Action buttons: Quiz + Notes + Roadmap */}
                       <div className="ec-action-row">
                         <button
                           className="ec-action-btn quiz"
@@ -308,7 +335,6 @@ function MyEnrolledCourses() {
                         >
                           <FaStickyNote size={12} /> Notes
                         </button>
-                        {/* ── NEW: Roadmap button ── */}
                         <button
                           className="ec-action-btn roadmap"
                           onClick={(e) => {
