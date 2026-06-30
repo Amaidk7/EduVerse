@@ -188,7 +188,7 @@ function AllCourses() {
           paddingBottom: 48,
           marginLeft: 260,
         }}
-        className="lg:ml-[260px] ml-0 px-4"
+        className="lg:ml-65 ml-0 px-4"
       >
         {/* Header */}
         <div style={{ marginBottom: 32, paddingLeft: 8 }}>
